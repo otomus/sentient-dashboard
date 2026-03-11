@@ -16,12 +16,15 @@ export function DreamPanel() {
   const dreamMessage = useNeuralStore((s) => s.dreamMessage);
   const nerves = useNeuralStore((s) => s.nerves);
 
-  if (!dreamStage) return null;
-
-  const info = stageLabels[dreamStage] || { label: dreamStage.toUpperCase(), color: "#a78bfa" };
-
   // Find nerves currently being tested
   const testingNerves = nerves.filter((n) => n.status === "testing");
+
+  // Show panel if dream stage is active OR if any nerves are testing
+  if (!dreamStage && testingNerves.length === 0) return null;
+
+  const info = dreamStage
+    ? (stageLabels[dreamStage] || { label: dreamStage.toUpperCase(), color: "#a78bfa" })
+    : { label: "QUALIFYING", color: "#f5d05b" };
 
   return (
     <div

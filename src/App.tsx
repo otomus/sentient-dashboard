@@ -1,13 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { initClient } from "./client/sentient";
-import { BrainScene } from "./components/visualization/BrainScene";
+import { Brain2D } from "./components/visualization/Brain2D";
 import { Header } from "./components/layout/Header";
+import { CounterBar } from "./components/layout/CounterBar";
 import { FloatingChat } from "./components/chat/FloatingChat";
 import { LogDrawer } from "./components/reflex/LogDrawer";
 import { NerveDetail } from "./components/nerves/NerveDetail";
+import { NervesPanel } from "./components/nerves/NervesPanel";
 import { DreamPanel } from "./components/nerves/DreamPanel";
 
 export default function App() {
+  const [nervesOpen, setNervesOpen] = useState(false);
+
   useEffect(() => {
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${proto}//localhost:3000`;
@@ -16,22 +20,28 @@ export default function App() {
 
   return (
     <>
-      {/* Full-page WebGL 3D brain — the star of the show */}
-      <BrainScene />
+      {/* 2D SVG brain — center stage */}
+      <Brain2D />
 
-      {/* Minimal header bar */}
+      {/* Header bar */}
       <Header />
 
-      {/* Floating draggable chat widget */}
+      {/* Counter widgets under header */}
+      <CounterBar onNervesClick={() => setNervesOpen(true)} />
+
+      {/* Chat widget */}
       <FloatingChat />
 
       {/* Log drawer from left */}
       <LogDrawer />
 
+      {/* Nerves panel — slides from right */}
+      <NervesPanel open={nervesOpen} onClose={() => setNervesOpen(false)} />
+
       {/* Nerve detail modal */}
       <NerveDetail />
 
-      {/* Dream state panel — shows during qualification/tuning */}
+      {/* Dream state panel */}
       <DreamPanel />
     </>
   );
