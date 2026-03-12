@@ -1,105 +1,75 @@
-name: Publish @otomus/create-sentient-dashboard
+name: Release
 
 on:
-  push:
-    tags:
-      - "create-sentient-dashboard@*"
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
 
 jobs:
-  check:
-    name: Lint, Test, Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    strategy:
-      matrix:
-        node-version: [20, 22]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install dependencies
-        run: rm -f package-lock.json && npm install
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Check formatting
-        run: npm run format:check
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
-
-  codeql:
-    name: CodeQL Analysis
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [javascript-typescript]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-
-      - name: Build
-        run: |
-          rm -f package-lock.json && npm install
-          npm run build
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:${{ matrix.language }}"
-
-  publish:
+  release:
     name: Publish to npm
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [check, codeql]
-
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
-      contents: read
-      id-token: write
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if version changed
+        id: version_check
+        run: |
+          CURRENT=$(node -p "require('./packages/create-sentient-dashboard/package.json').version")
+          git show HEAD~1:packages/create-sentient-dashboard/package.json > /tmp/prev-package.json 2>/dev/null || echo '{"version":"0.0.0"}' > /tmp/prev-package.json
+          PREVIOUS=$(node -p "require('/tmp/prev-package.json').version")
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+          echo "previous=$PREVIOUS" >> $GITHUB_OUTPUT
+          if [ "$CURRENT" != "$PREVIOUS" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Version changed: $PREVIOUS → $CURRENT"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Version unchanged: $CURRENT"
+          fi
 
       - name: Setup Node.js
+        if: steps.version_check.outputs.changed == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
+          node-version: 20
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
+        if: steps.version_check.outputs.changed == 'true'
         run: rm -f package-lock.json && npm install
 
-      - name: Build dashboard
-        run: npm run build
+      - name: Run full check
+        if: steps.version_check.outputs.changed == 'true'
+        run: npm run check
 
-      - name: Publish
+      - name: Prepack template
+        if: steps.version_check.outputs.changed == 'true'
         working-directory: packages/create-sentient-dashboard
-        run: |
-          npm run prepack
-          npm publish --access public --provenance
+        run: npm run prepack
+
+      - name: Publish to npm
+        if: steps.version_check.outputs.changed == 'true'
+        working-directory: packages/create-sentient-dashboard
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        if: steps.version_check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=${{ steps.version_check.outputs.current }}
+          gh release create "create-sentient-dashboard@v${VERSION}" \
+            --title "create-sentient-dashboard v${VERSION}" \
+            --generate-notes
