@@ -1,17 +1,17 @@
 import { useConnectionStore } from "../../stores/connection";
 import { useNeuralStore } from "../../stores/neural";
 
-const LETTERS = "SENTIENT".split("");
+const LETTERS = "ARQITECT".split("");
 const LETTER_DUR = 0.4; // seconds per letter draw
 const PAUSE = 1.5; // pause after full reveal before reset
 const TOTAL_DUR = LETTERS.length * LETTER_DUR + PAUSE;
 
-function SentientLogo() {
+function ArqitectLogo() {
   return (
     <svg
-      width="200"
+      width="220"
       height="28"
-      viewBox="0 0 200 28"
+      viewBox="0 0 220 28"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -20,26 +20,26 @@ function SentientLogo() {
           id="logo-gradient"
           x1="0"
           y1="0"
-          x2="200"
+          x2="220"
           y2="0"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0%" stopColor="#e0d6ff" />
-          <stop offset="50%" stopColor="#ffffff" />
-          <stop offset="100%" stopColor="#ffffff" />
+          <stop offset="0%" stopColor="#00d4ff" />
+          <stop offset="50%" stopColor="#00ff88" />
+          <stop offset="100%" stopColor="#00d4ff" />
         </linearGradient>
       </defs>
       {LETTERS.map((letter, i) => {
-        const x = i * 22;
+        const x = i * 25;
         const begin = `${i * LETTER_DUR}s`;
         return (
           <text
             key={i}
             x={x}
             y="20"
-            fontFamily="SF Mono, Fira Code, Cascadia Code, monospace"
+            fontFamily="Orbitron, sans-serif"
             fontSize="18"
-            fontWeight="700"
+            fontWeight="900"
             fill="none"
             stroke="url(#logo-gradient)"
             strokeWidth="1"
@@ -62,6 +62,7 @@ function SentientLogo() {
   );
 }
 
+/** Top navigation bar with animated ARQITECT logo and connection status indicator. */
 export function Header() {
   const status = useConnectionStore((s) => s.status);
   const dreamStage = useNeuralStore((s) => s.dreamStage);
@@ -69,7 +70,7 @@ export function Header() {
   const isDreaming = dreamStage !== null;
   const isOnline = status === "online";
 
-  const dotColor = isDreaming ? "#c084fc" : isOnline ? "#5bf5a0" : "#f55b5b";
+  const dotColor = isDreaming ? "#00a8cc" : isOnline ? "#00ff88" : "#f55b5b";
 
   const statusLabel = isDreaming
     ? "DREAMING"
@@ -87,11 +88,11 @@ export function Header() {
         paddingRight: 64,
         paddingTop: 16,
         paddingBottom: 16,
-        background: "rgba(10, 10, 15, 0.6)",
-        borderBottom: "1px solid rgba(91,245,160,0.3)",
+        background: "rgba(5, 5, 16, 0.6)",
+        borderBottom: "1px solid rgba(0, 212, 255, 0.15)",
       }}
     >
-      <SentientLogo />
+      <ArqitectLogo />
 
       <div className="flex items-center gap-2">
         <div
@@ -111,8 +112,9 @@ export function Header() {
             fontSize: 11,
             fontWeight: 600,
             letterSpacing: 1,
-            textTransform: "uppercase" as const,
-            color: isDreaming ? "#c084fc" : "rgba(255,255,255,0.7)",
+            textTransform: "uppercase",
+            fontFamily: "Orbitron, sans-serif",
+            color: isDreaming ? "#00a8cc" : "rgba(224, 224, 240, 0.7)",
           }}
         >
           {statusLabel}

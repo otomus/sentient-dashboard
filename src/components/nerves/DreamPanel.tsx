@@ -1,15 +1,17 @@
+import { useMemo } from "react";
 import { useNeuralStore, type DreamStage } from "../../stores/neural";
 
 const stageLabels: Record<NonNullable<DreamStage>, { label: string; color: string }> = {
   qualifying: { label: "QUALIFYING", color: "#f5d05b" },
-  qualified: { label: "QUALIFIED", color: "#5bf5a0" },
+  qualified: { label: "QUALIFIED", color: "#00ff88" },
   qualification_failed: { label: "QUALIFICATION FAILED", color: "#f55b5b" },
-  reconciling: { label: "RECONCILING", color: "#a78bfa" },
+  reconciling: { label: "RECONCILING", color: "#00d4ff" },
   pruning: { label: "PRUNING", color: "#f55b5b" },
-  finetuning: { label: "FINE-TUNING", color: "#c084fc" },
-  personality_reflection: { label: "REFLECTING", color: "#e0d6ff" },
+  finetuning: { label: "FINE-TUNING", color: "#00a8cc" },
+  personality_reflection: { label: "REFLECTING", color: "#00ff88" },
 };
 
+/** Bottom-center panel showing active dream state and nerve testing progress. */
 export function DreamPanel() {
   const dreamStage = useNeuralStore((s) => s.dreamStage);
   const dreamNerve = useNeuralStore((s) => s.dreamNerve);
@@ -17,14 +19,14 @@ export function DreamPanel() {
   const nerves = useNeuralStore((s) => s.nerves);
 
   // Find nerves currently being tested
-  const testingNerves = nerves.filter((n) => n.status === "testing");
+  const testingNerves = useMemo(() => nerves.filter((n) => n.status === "testing"), [nerves]);
 
   // Show panel if dream stage is active OR if any nerves are testing
   if (!dreamStage && testingNerves.length === 0) return null;
 
   const info = dreamStage
-    ? stageLabels[dreamStage] || { label: dreamStage.toUpperCase(), color: "#a78bfa" }
-    : { label: "QUALIFYING", color: "#f5d05b" };
+    ? stageLabels[dreamStage] || { label: dreamStage.toUpperCase(), color: "#00d4ff" }
+    : { label: "QUALIFYING", color: "#00d4ff" };
 
   return (
     <div
@@ -92,7 +94,7 @@ export function DreamPanel() {
                 color: info.color,
                 fontSize: 13,
                 fontWeight: 700,
-                fontFamily: "SF Mono, Fira Code, monospace",
+                fontFamily: "Share Tech Mono, JetBrains Mono, monospace",
               }}
             >
               {dreamNerve}
@@ -131,7 +133,7 @@ export function DreamPanel() {
                       style={{
                         color: "rgba(255,255,255,0.7)",
                         fontSize: 11,
-                        fontFamily: "SF Mono, Fira Code, monospace",
+                        fontFamily: "Share Tech Mono, JetBrains Mono, monospace",
                       }}
                     >
                       {nerve.name}

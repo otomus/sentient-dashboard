@@ -21,17 +21,17 @@ function ChatMessageRaw({ message }: Props) {
       }`}
       style={{
         padding: "10px 14px",
-        background: isUser ? "rgba(80, 50, 160, 0.35)" : "rgba(0, 0, 0, 0.35)",
+        background: isUser ? "rgba(0, 50, 100, 0.35)" : "rgba(0, 0, 0, 0.35)",
         border: isUser
-          ? "1px solid rgba(167, 139, 250, 0.25)"
+          ? "1px solid rgba(0, 212, 255, 0.25)"
           : "1px solid rgba(255, 255, 255, 0.08)",
       }}
     >
       <div
         className="text-[9px] font-bold uppercase tracking-[0.5px] mb-1"
-        style={{ color: isUser ? "#a78bfa" : "rgba(255, 255, 255, 0.5)" }}
+        style={{ color: isUser ? "#00d4ff" : "rgba(224, 224, 240, 0.5)" }}
       >
-        {isUser ? (message.source === "dashboard" ? "YOU" : message.source || "USER") : "SENTIENT"}
+        {isUser ? (message.source === "dashboard" ? "YOU" : message.source || "USER") : "ARQITECT"}
       </div>
 
       {/* Text content */}

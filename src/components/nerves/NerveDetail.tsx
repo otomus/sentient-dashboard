@@ -1,4 +1,5 @@
 import { useNeuralStore } from "../../stores/neural";
+import { normalizeScore, scoreColor as getScoreColor, statusColor as getStatusColor } from "../../utils/nerve";
 
 interface TestResult {
   passed?: boolean;
@@ -7,6 +8,7 @@ interface TestResult {
   reasoning?: string;
 }
 
+/** Modal overlay showing detailed nerve information: score, status, system prompt, test results, etc. */
 export function NerveDetail() {
   const selectedNerve = useNeuralStore((s) => s.selectedNerve);
   const nerves = useNeuralStore((s) => s.nerves);
@@ -17,20 +19,14 @@ export function NerveDetail() {
     useNeuralStore.getState().setSelectedNerveDetails(null);
   };
 
-  const nerve = nerves.find((n) => n.name === selectedNerve);
-  if (!nerve) return null;
+  if (!selectedNerve) return null;
 
-  const scoreRaw = details?.score ?? nerve.score;
-  const scorePercent = scoreRaw > 1 ? Math.round(scoreRaw) : Math.round(scoreRaw * 100);
-  const scoreColor = scorePercent >= 70 ? "#5bf5a0" : scorePercent >= 40 ? "#f5d05b" : "#f55b5b";
-  const statusColor =
-    nerve.status === "pass"
-      ? "#5bf5a0"
-      : nerve.status === "fail"
-        ? "#f55b5b"
-        : nerve.status === "testing"
-          ? "#f5d05b"
-          : "rgba(255,255,255,0.4)";
+  const nerve = nerves.find((n) => n.name === selectedNerve);
+
+  const scorePercent = normalizeScore(details?.score ?? nerve?.score ?? 0);
+  const nerveScoreColor = getScoreColor(scorePercent);
+  const status = nerve?.status ?? "unknown";
+  const nerveStatusColor = getStatusColor(status);
 
   return (
     <>
@@ -49,7 +45,7 @@ export function NerveDetail() {
           width: 480,
           maxHeight: "80vh",
           background: "rgba(14, 14, 22, 0.85)",
-          border: "1px solid rgba(91, 245, 160, 0.3)",
+          border: "1px solid rgba(0, 212, 255, 0.3)",
           boxShadow: "0 12px 48px rgba(0,0,0,0.6)",
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
@@ -60,17 +56,17 @@ export function NerveDetail() {
           className="flex items-center justify-between shrink-0"
           style={{
             padding: "16px 24px",
-            borderBottom: "1px solid rgba(91, 245, 160, 0.25)",
+            borderBottom: "1px solid rgba(0, 212, 255, 0.25)",
             background: "rgba(10, 10, 16, 0.5)",
           }}
         >
           <div className="flex items-center gap-3">
             <div
               className="w-2.5 h-2.5 rounded-full"
-              style={{ background: statusColor, boxShadow: `0 0 8px ${statusColor}` }}
+              style={{ background: nerveStatusColor, boxShadow: `0 0 8px ${nerveStatusColor}` }}
             />
             <span style={{ color: "rgba(255,255,255,0.9)", fontSize: 14, fontWeight: 700 }}>
-              {nerve.name}
+              {selectedNerve}
             </span>
           </div>
           <button
@@ -122,7 +118,7 @@ export function NerveDetail() {
             >
               Score
             </span>
-            <span style={{ color: scoreColor, fontSize: 20, fontWeight: 800 }}>
+            <span style={{ color: nerveScoreColor, fontSize: 20, fontWeight: 800 }}>
               {scorePercent}%
             </span>
           </div>
@@ -138,7 +134,7 @@ export function NerveDetail() {
               style={{
                 height: "100%",
                 width: `${Math.min(scorePercent, 100)}%`,
-                background: scoreColor,
+                background: nerveScoreColor,
                 borderRadius: 2,
                 transition: "width 0.5s",
               }}
@@ -147,21 +143,21 @@ export function NerveDetail() {
 
           {/* Status grid */}
           <div className="grid grid-cols-3 gap-4" style={{ marginBottom: 20 }}>
-            <InfoRow label="Status" value={nerve.status.toUpperCase()} valueColor={statusColor} />
+            <InfoRow label="Status" value={status.toUpperCase()} valueColor={nerveStatusColor} />
             <InfoRow
               label="Qualified"
               value={
-                nerve.qualified === true ? "YES" : nerve.qualified === false ? "NO" : "PENDING"
+                nerve?.qualified === true ? "YES" : nerve?.qualified === false ? "NO" : "PENDING"
               }
               valueColor={
-                nerve.qualified
-                  ? "#5bf5a0"
-                  : nerve.qualified === false
+                nerve?.qualified
+                  ? "#00ff88"
+                  : nerve?.qualified === false
                     ? "#f55b5b"
                     : "rgba(255,255,255,0.5)"
               }
             />
-            <InfoRow label="Iteration" value={`${nerve.iteration} / ${nerve.max_iterations}`} />
+            <InfoRow label="Iteration" value={`${nerve?.iteration ?? 0} / ${nerve?.max_iterations ?? "?"}`} />
           </div>
 
           {/* Invocation stats from details */}
@@ -171,7 +167,7 @@ export function NerveDetail() {
               <InfoRow
                 label="Successes"
                 value={String(details.successes ?? 0)}
-                valueColor="#5bf5a0"
+                valueColor="#00ff88"
               />
               <InfoRow
                 label="Failures"
@@ -200,9 +196,9 @@ export function NerveDetail() {
                   fontSize: 11,
                   padding: "4px 8px",
                   borderRadius: 4,
-                  background: "rgba(167,139,250,0.12)",
-                  border: "1px solid rgba(167,139,250,0.25)",
-                  color: "#a78bfa",
+                  background: "rgba(0, 212, 255,0.12)",
+                  border: "1px solid rgba(0, 212, 255,0.25)",
+                  color: "#00d4ff",
                   fontWeight: 600,
                 }}
               >
@@ -220,7 +216,7 @@ export function NerveDetail() {
                   color: "rgba(255,255,255,0.7)",
                   fontSize: 11,
                   lineHeight: 1.6,
-                  fontFamily: "SF Mono, Fira Code, monospace",
+                  fontFamily: "Share Tech Mono, JetBrains Mono, monospace",
                   padding: "10px 12px",
                   borderRadius: 6,
                   background: "rgba(0,0,0,0.3)",
@@ -236,21 +232,21 @@ export function NerveDetail() {
           )}
 
           {/* Tools */}
-          {(details?.tools || nerve.tools).length > 0 && (
+          {(details?.tools || nerve?.tools || []).length > 0 && (
             <div style={{ marginBottom: 16 }}>
               <SectionLabel>Tools</SectionLabel>
               <div className="flex flex-wrap gap-1.5">
-                {(details?.tools || nerve.tools).map((tool) => (
+                {(details?.tools || nerve?.tools || []).map((tool) => (
                   <span
                     key={tool}
                     style={{
                       fontSize: 11,
                       padding: "4px 8px",
                       borderRadius: 4,
-                      background: "rgba(91, 245, 160, 0.08)",
-                      border: "1px solid rgba(91, 245, 160, 0.2)",
+                      background: "rgba(0, 212, 255, 0.08)",
+                      border: "1px solid rgba(0, 212, 255, 0.2)",
                       color: "rgba(255,255,255,0.7)",
-                      fontFamily: "SF Mono, Fira Code, monospace",
+                      fontFamily: "Share Tech Mono, JetBrains Mono, monospace",
                     }}
                   >
                     {tool}
@@ -292,7 +288,7 @@ export function NerveDetail() {
                         color: "rgba(255,255,255,0.8)",
                         fontSize: 11,
                         marginBottom: 6,
-                        fontFamily: "SF Mono, Fira Code, monospace",
+                        fontFamily: "Share Tech Mono, JetBrains Mono, monospace",
                       }}
                     >
                       {ex.input}
@@ -311,9 +307,9 @@ export function NerveDetail() {
                     </div>
                     <div
                       style={{
-                        color: "rgba(91, 245, 160, 0.7)",
+                        color: "rgba(0, 212, 255, 0.7)",
                         fontSize: 11,
-                        fontFamily: "SF Mono, Fira Code, monospace",
+                        fontFamily: "Share Tech Mono, JetBrains Mono, monospace",
                         whiteSpace: "pre-wrap",
                       }}
                     >
@@ -338,8 +334,8 @@ export function NerveDetail() {
                     style={{
                       padding: "6px 10px",
                       borderRadius: 4,
-                      background: result.passed ? "rgba(91,245,160,0.06)" : "rgba(245,91,91,0.06)",
-                      border: `1px solid ${result.passed ? "rgba(91,245,160,0.15)" : "rgba(245,91,91,0.15)"}`,
+                      background: result.passed ? "rgba(0,212,255,0.06)" : "rgba(245,91,91,0.06)",
+                      border: `1px solid ${result.passed ? "rgba(0,212,255,0.15)" : "rgba(245,91,91,0.15)"}`,
                       marginBottom: 4,
                     }}
                   >
@@ -349,7 +345,7 @@ export function NerveDetail() {
                     >
                       <span
                         style={{
-                          color: result.passed ? "#5bf5a0" : "#f55b5b",
+                          color: result.passed ? "#00ff88" : "#f55b5b",
                           fontSize: 10,
                           fontWeight: 700,
                         }}

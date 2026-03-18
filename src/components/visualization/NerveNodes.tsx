@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useNeuralStore } from "../../stores/neural";
-import { getClient } from "../../client/sentient";
+import { loadNerveDetails } from "../../utils/nerve";
 
 interface NerveNodeProps {
   name: string;
@@ -42,22 +42,25 @@ function SynapseBeam({ target }: { target: THREE.Vector3 }) {
     mat.opacity = 0.6 + Math.sin(t * 6) * 0.3;
   });
 
+  const lineMaterial = useMemo(
+    () =>
+      new THREE.LineBasicMaterial({
+        color: "#00ff88",
+        transparent: true,
+        opacity: 0.3,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    [],
+  );
+
   return (
     <>
-      {/* @ts-expect-error R3F line element type mismatch */}
-      <line ref={lineRef} geometry={geometry}>
-        <lineBasicMaterial
-          color="#5bf5a0"
-          transparent
-          opacity={0.3}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </line>
+      <primitive ref={lineRef} object={new THREE.Line(geometry, lineMaterial)} />
       <mesh ref={pulseRef}>
         <sphereGeometry args={[0.03, 8, 8]} />
         <meshBasicMaterial
-          color="#5bf5a0"
+          color="#00ff88"
           transparent
           opacity={0.8}
           blending={THREE.AdditiveBlending}
@@ -74,10 +77,10 @@ function NerveNode({ name, position, score, status, isActive }: NerveNodeProps) 
   const [hovered, setHovered] = useState(false);
 
   const color = useMemo(() => {
-    if (status === "pass") return new THREE.Color("#a78bfa");
+    if (status === "pass") return new THREE.Color("#00d4ff");
     if (status === "fail") return new THREE.Color("#f55b5b");
-    if (status === "testing") return new THREE.Color("#c084fc");
-    return new THREE.Color("#555568");
+    if (status === "testing") return new THREE.Color("#00ff88");
+    return new THREE.Color("#4a4a6a");
   }, [status]);
 
   const normalizedScore = score > 1 ? score / 100 : score;
@@ -91,21 +94,7 @@ function NerveNode({ name, position, score, status, isActive }: NerveNodeProps) 
     meshRef.current.position.z = basePos.z + Math.sin(t * 0.2 + basePos.z) * 0.1;
   });
 
-  const handleClick = () => {
-    const store = useNeuralStore.getState();
-    store.setSelectedNerve(name);
-    store.setDetailsLoading(true);
-    store.setSelectedNerveDetails(null);
-    getClient()
-      .getNerveDetails(name)
-      .then((details) => {
-        useNeuralStore.getState().setSelectedNerveDetails(details);
-        useNeuralStore.getState().setDetailsLoading(false);
-      })
-      .catch(() => {
-        useNeuralStore.getState().setDetailsLoading(false);
-      });
-  };
+  const handleClick = () => loadNerveDetails(name);
 
   return (
     <group ref={meshRef} position={position}>
@@ -136,7 +125,7 @@ function NerveNode({ name, position, score, status, isActive }: NerveNodeProps) 
         <mesh>
           <ringGeometry args={[size * 2, size * 3, 32]} />
           <meshBasicMaterial
-            color="#5bf5a0"
+            color="#00ff88"
             transparent
             opacity={0.6}
             side={THREE.DoubleSide}
@@ -150,9 +139,9 @@ function NerveNode({ name, position, score, status, isActive }: NerveNodeProps) 
       <Html center style={{ pointerEvents: "none" }}>
         <div
           style={{
-            color: isActive ? "#5bf5a0" : hovered ? "#ffffff" : "rgba(255,255,255,0.55)",
+            color: isActive ? "#00ff88" : hovered ? "#ffffff" : "rgba(224,224,240,0.55)",
             fontSize: 11,
-            fontFamily: "SF Mono, Fira Code, monospace",
+            fontFamily: "Share Tech Mono, JetBrains Mono, monospace",
             fontWeight: isActive ? 700 : 600,
             whiteSpace: "nowrap",
             textShadow: "0 0 8px rgba(0,0,0,0.9), 0 0 16px rgba(0,0,0,0.7)",
@@ -184,6 +173,7 @@ function distributeOnSphere(count: number, radius: number): [number, number, num
   return points;
 }
 
+/** 3D nerve node cloud distributed on a sphere around the brain core. */
 export function NerveNodes() {
   const nerves = useNeuralStore((s) => s.nerves);
   const activeNerve = useNeuralStore((s) => s.activeNerve);
@@ -195,9 +185,14 @@ export function NerveNodes() {
   const activeIndex = nerves.findIndex((n) => n.name === activeNerve);
   const activePos = activeIndex >= 0 ? positions[activeIndex] : null;
 
+  const activeTarget = useMemo(
+    () => (activePos ? new THREE.Vector3(...activePos) : null),
+    [activePos],
+  );
+
   return (
     <group>
-      {activePos && <SynapseBeam target={new THREE.Vector3(...activePos)} />}
+      {activeTarget && <SynapseBeam target={activeTarget} />}
 
       {nerves.map((nerve, i) => (
         <NerveNode

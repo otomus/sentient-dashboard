@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/purity */
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -29,6 +29,12 @@ export function AmbientParticles({ count }: Props) {
 
   const circleTexture = useMemo(() => createCircleTexture(), []);
 
+  useEffect(() => {
+    return () => {
+      circleTexture.dispose();
+    };
+  }, [circleTexture]);
+
   const positions = useMemo(() => {
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -56,7 +62,7 @@ export function AmbientParticles({ count }: Props) {
       </bufferGeometry>
       <pointsMaterial
         size={0.06}
-        color="#a78bfa"
+        color="#00d4ff"
         transparent
         opacity={0.5}
         sizeAttenuation

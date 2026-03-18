@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./tokens.css";
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Share+Tech+Mono&display=swap');
 
 * {
   margin: 0;
@@ -10,7 +11,7 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  font-family: "Share Tech Mono", "JetBrains Mono", monospace;
   font-size: 13px;
   height: 100vh;
   overflow: hidden;
@@ -24,14 +25,17 @@ body {
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--border-bright);
   border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
 
 /* Glass panel base */

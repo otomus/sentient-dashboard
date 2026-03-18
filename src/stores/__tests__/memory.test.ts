@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useMemoryStore } from "../memory";
-import type { MemoryState } from "@otomus/sentient-sdk";
+import { memoryStateFactory } from "../../test/factories";
 
 const initialState = {
   session: {},
@@ -8,10 +8,6 @@ const initialState = {
   episodes: [],
   facts: [],
 };
-
-function makeMemoryState(overrides: Partial<Record<keyof MemoryState, unknown>> = {}): MemoryState {
-  return overrides as unknown as MemoryState;
-}
 
 describe("useMemoryStore", () => {
   beforeEach(() => {
@@ -28,7 +24,7 @@ describe("useMemoryStore", () => {
 
   describe("update", () => {
     it("sets all fields from data", () => {
-      const data = makeMemoryState({
+      const data = memoryStateFactory.build({
         session: { user: "alice" },
         conversation: [{ role: "user", content: "hi" }],
         episodes: [{ task: "greet", nerve: "chat", success: true }],
@@ -44,7 +40,7 @@ describe("useMemoryStore", () => {
     });
 
     it("defaults missing fields to empty object/array", () => {
-      useMemoryStore.getState().update(makeMemoryState());
+      useMemoryStore.getState().update(memoryStateFactory.build());
       const state = useMemoryStore.getState();
       expect(state.session).toEqual({});
       expect(state.conversation).toEqual([]);
@@ -53,14 +49,12 @@ describe("useMemoryStore", () => {
     });
 
     it("handles null fields via nullish coalescing", () => {
-      useMemoryStore.getState().update(
-        makeMemoryState({
-          session: null,
-          conversation: null,
-          episodes: null,
-          facts: null,
-        }),
-      );
+      useMemoryStore.getState().update({
+        session: null,
+        conversation: null,
+        episodes: null,
+        facts: null,
+      } as unknown as import("@otomus/sentient-sdk").MemoryState);
       const state = useMemoryStore.getState();
       expect(state.session).toEqual({});
       expect(state.conversation).toEqual([]);
@@ -70,20 +64,16 @@ describe("useMemoryStore", () => {
 
     it("replaces previous state entirely", () => {
       useMemoryStore.getState().update(
-        makeMemoryState({
+        memoryStateFactory.build({
           session: { a: "1" },
           conversation: [{ role: "user", content: "hi" }],
-          episodes: [],
-          facts: [],
         }),
       );
 
       useMemoryStore.getState().update(
-        makeMemoryState({
+        memoryStateFactory.build({
           session: { b: "2" },
-          conversation: [],
           episodes: [{ task: "t", nerve: "n", success: false }],
-          facts: [],
         }),
       );
 
@@ -94,14 +84,12 @@ describe("useMemoryStore", () => {
     });
 
     it("handles undefined fields via nullish coalescing", () => {
-      useMemoryStore.getState().update(
-        makeMemoryState({
-          session: undefined,
-          conversation: undefined,
-          episodes: undefined,
-          facts: undefined,
-        }),
-      );
+      useMemoryStore.getState().update({
+        session: undefined,
+        conversation: undefined,
+        episodes: undefined,
+        facts: undefined,
+      } as unknown as import("@otomus/sentient-sdk").MemoryState);
       const state = useMemoryStore.getState();
       expect(state.session).toEqual({});
       expect(state.conversation).toEqual([]);

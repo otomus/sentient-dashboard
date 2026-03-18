@@ -3,6 +3,7 @@ import { useChatStore } from "../../stores/chat";
 import { ChatMessage } from "./ChatMessage";
 import { sendTask } from "../../client/sentient";
 
+/** Draggable floating chat widget with message history, typing indicator, and unread badge. */
 export function FloatingChat() {
   const messages = useChatStore((s) => s.messages);
   const isTyping = useChatStore((s) => s.isTyping);
@@ -107,7 +108,7 @@ export function FloatingChat() {
         style={{
           background: "rgba(255, 255, 255, 0.12)",
           boxShadow: "0 0 20px rgba(255, 255, 255, 0.08)",
-          border: "1px solid rgba(91, 245, 160, 0.35)",
+          border: "1px solid rgba(0, 212, 255, 0.35)",
         }}
       >
         {/* Chat icon */}
@@ -149,7 +150,7 @@ export function FloatingChat() {
         className="flex flex-col w-full h-full rounded-xl overflow-hidden"
         style={{
           background: "rgba(18, 18, 28, 0.45)",
-          border: "1px solid rgba(91, 245, 160, 0.3)",
+          border: "1px solid rgba(0, 212, 255, 0.3)",
           boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
           backdropFilter: "blur(24px) saturate(1.2)",
           WebkitBackdropFilter: "blur(24px) saturate(1.2)",
@@ -161,14 +162,14 @@ export function FloatingChat() {
           className={`flex items-center justify-between shrink-0 select-none ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
           style={{
             padding: "14px 20px",
-            borderBottom: "1px solid rgba(91, 245, 160, 0.25)",
+            borderBottom: "1px solid rgba(0, 212, 255, 0.25)",
             background: "rgba(10, 10, 16, 0.5)",
           }}
         >
           <div className="flex items-center gap-2.5">
             <div
               className="w-2 h-2 rounded-full"
-              style={{ background: "#a78bfa", boxShadow: "0 0 6px rgba(167, 139, 250, 0.4)" }}
+              style={{ background: "#00d4ff", boxShadow: "0 0 6px rgba(0, 212, 255, 0.4)" }}
             />
             <span
               className="text-xs font-semibold tracking-widest uppercase"
@@ -219,9 +220,9 @@ export function FloatingChat() {
           {isTyping && (
             <div
               className="self-start italic"
-              style={{ color: "#a78bfa", fontSize: 12, padding: "4px 12px" }}
+              style={{ color: "#00d4ff", fontSize: 12, padding: "4px 12px" }}
             >
-              Sentient is thinking
+              Arqitect is thinking
               <span className="inline-block animate-[blink_1.4s_infinite]">.</span>
               <span className="inline-block animate-[blink_1.4s_infinite_0.2s]">.</span>
               <span className="inline-block animate-[blink_1.4s_infinite_0.4s]">.</span>
@@ -234,7 +235,7 @@ export function FloatingChat() {
           className="flex items-center gap-3 shrink-0"
           style={{
             padding: "12px 20px",
-            borderTop: "1px solid rgba(91, 245, 160, 0.25)",
+            borderTop: "1px solid rgba(0, 212, 255, 0.25)",
             background: "rgba(10, 10, 16, 0.5)",
           }}
         >
@@ -255,8 +256,8 @@ export function FloatingChat() {
             style={{
               padding: "8px 16px",
               color: "#ffffff",
-              border: "1px solid rgba(91, 245, 160, 0.6)",
-              background: "rgba(91, 245, 160, 0.25)",
+              border: "1px solid rgba(0, 212, 255, 0.6)",
+              background: "rgba(0, 212, 255, 0.25)",
               fontWeight: 800,
             }}
           >

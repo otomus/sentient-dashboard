@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useReflexStore } from "../reflex";
+import { logEntryFactory } from "../../test/factories";
 
 describe("useReflexStore", () => {
   beforeEach(() => {
@@ -45,16 +46,9 @@ describe("useReflexStore", () => {
     });
 
     it("caps logs at 501 entries (slices to last 500 then appends 1)", () => {
-      // Pre-fill with 500 logs
-      const existingLogs = Array.from({ length: 500 }, (_, i) => ({
-        id: `existing-${i}`,
-        type: "system" as const,
-        text: `log-${i}`,
-        timestamp: Date.now(),
-      }));
+      const existingLogs = logEntryFactory.buildList(500);
       useReflexStore.setState({ logs: existingLogs });
 
-      // Adding one more should keep 501 (500 sliced + 1 new)
       useReflexStore.getState().log("error", "overflow");
       const logs = useReflexStore.getState().logs;
       expect(logs).toHaveLength(501);
@@ -63,13 +57,9 @@ describe("useReflexStore", () => {
     });
 
     it("trims when exceeding 500 before appending", () => {
-      // Pre-fill with 600 logs
-      const existingLogs = Array.from({ length: 600 }, (_, i) => ({
-        id: `existing-${i}`,
-        type: "system" as const,
-        text: `log-${i}`,
-        timestamp: Date.now(),
-      }));
+      const existingLogs = logEntryFactory.buildList(600);
+      // Override to predictable values
+      existingLogs.forEach((log, i) => { log.id = `existing-${i}`; log.text = `log-${i}`; });
       useReflexStore.setState({ logs: existingLogs });
 
       useReflexStore.getState().log("action", "new-entry");

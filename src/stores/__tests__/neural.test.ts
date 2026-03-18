@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useNeuralStore } from "../neural";
-import type { NerveStatus, NerveDetails } from "@otomus/sentient-sdk";
+import { nerveStatusFactory, nerveDetailsFactory, neuralEventFactory } from "../../test/factories";
 
 const initialState = {
   nerves: [],
@@ -14,14 +14,6 @@ const initialState = {
   dreamNerve: null,
   dreamMessage: null,
 };
-
-function makeNerveStatus(overrides: Record<string, unknown>): NerveStatus {
-  return overrides as unknown as NerveStatus;
-}
-
-function makeNerveDetails(overrides: Record<string, unknown>): NerveDetails {
-  return overrides as unknown as NerveDetails;
-}
 
 describe("useNeuralStore", () => {
   beforeEach(() => {
@@ -44,19 +36,20 @@ describe("useNeuralStore", () => {
 
   describe("updateNerves", () => {
     it("sets nerves array", () => {
-      const nerves = [makeNerveStatus({ name: "vision", status: "active" })];
+      const nerves = [nerveStatusFactory.build({ name: "vision", status: "pass" })];
       useNeuralStore.getState().updateNerves(nerves);
       expect(useNeuralStore.getState().nerves).toEqual(nerves);
     });
 
     it("replaces existing nerves", () => {
-      useNeuralStore.getState().updateNerves([makeNerveStatus({ name: "a" })]);
-      useNeuralStore.getState().updateNerves([makeNerveStatus({ name: "b" })]);
-      expect(useNeuralStore.getState().nerves).toEqual([{ name: "b" }]);
+      useNeuralStore.getState().updateNerves([nerveStatusFactory.build({ name: "a" })]);
+      const replacement = [nerveStatusFactory.build({ name: "b" })];
+      useNeuralStore.getState().updateNerves(replacement);
+      expect(useNeuralStore.getState().nerves).toEqual(replacement);
     });
 
     it("can set to empty array", () => {
-      useNeuralStore.getState().updateNerves([makeNerveStatus({ name: "a" })]);
+      useNeuralStore.getState().updateNerves([nerveStatusFactory.build({ name: "a" })]);
       useNeuralStore.getState().updateNerves([]);
       expect(useNeuralStore.getState().nerves).toEqual([]);
     });
@@ -80,11 +73,7 @@ describe("useNeuralStore", () => {
     });
 
     it("caps events at 101 (slices to last 100 then appends 1)", () => {
-      const existing = Array.from({ length: 100 }, (_, i) => ({
-        id: `existing-${i}`,
-        type: "thought" as const,
-        timestamp: Date.now(),
-      }));
+      const existing = neuralEventFactory.buildList(100);
       useNeuralStore.setState({ events: existing });
 
       useNeuralStore.getState().addEvent({ type: "result" });
@@ -94,11 +83,9 @@ describe("useNeuralStore", () => {
     });
 
     it("trims when exceeding 100 before appending", () => {
-      const existing = Array.from({ length: 150 }, (_, i) => ({
-        id: `existing-${i}`,
-        type: "thought" as const,
-        timestamp: i,
-      }));
+      const existing = neuralEventFactory.buildList(150, {}, { transient: { startId: 0 } });
+      // Override IDs to be predictable
+      existing.forEach((e, i) => { e.id = `existing-${i}`; e.timestamp = i; });
       useNeuralStore.setState({ events: existing });
 
       useNeuralStore.getState().addEvent({ type: "response" });
@@ -145,13 +132,13 @@ describe("useNeuralStore", () => {
 
   describe("setSelectedNerveDetails", () => {
     it("sets selectedNerveDetails", () => {
-      const details = makeNerveDetails({ name: "vision", config: {} });
+      const details = nerveDetailsFactory.build({ name: "vision" });
       useNeuralStore.getState().setSelectedNerveDetails(details);
       expect(useNeuralStore.getState().selectedNerveDetails).toEqual(details);
     });
 
     it("clears with null", () => {
-      useNeuralStore.getState().setSelectedNerveDetails(makeNerveDetails({ name: "x" }));
+      useNeuralStore.getState().setSelectedNerveDetails(nerveDetailsFactory.build());
       useNeuralStore.getState().setSelectedNerveDetails(null);
       expect(useNeuralStore.getState().selectedNerveDetails).toBeNull();
     });

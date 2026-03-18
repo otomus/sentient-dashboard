@@ -3,6 +3,8 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useRef, useEffect } from "react";
 import * as THREE from "three";
 
+const LOOK_AT_ORIGIN = new THREE.Vector3(0, 0, 0);
+
 export function SceneCamera() {
   const { camera } = useThree();
   const mouse = useRef({ x: 0, y: 0 });
@@ -37,7 +39,7 @@ export function SceneCamera() {
     camera.position.y += (targetY - camera.position.y) * 0.02;
     camera.position.z += (targetZ - camera.position.z) * 0.02;
 
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    camera.lookAt(LOOK_AT_ORIGIN);
   });
 
   return null;

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNeuralStore } from "../../stores/neural";
-import { getClient } from "../../client/sentient";
+import { normalizeScore, scoreColor, statusColor, loadNerveDetails } from "../../utils/nerve";
 import type { NerveStatus } from "@otomus/sentient-sdk";
 
 interface NervesPanelProps {
@@ -10,6 +10,7 @@ interface NervesPanelProps {
 
 type FilterStatus = "all" | "pass" | "fail" | "testing" | "unknown";
 
+/** Slide-out panel listing all nerves with search, filter, and click-to-detail. */
 export function NervesPanel({ open, onClose }: NervesPanelProps) {
   const nerves = useNeuralStore((s) => s.nerves);
   const [filter, setFilter] = useState<FilterStatus>("all");
@@ -22,25 +23,9 @@ export function NervesPanel({ open, onClose }: NervesPanelProps) {
     return list;
   }, [nerves, filter, search]);
 
-  const handleNerveClick = (nerve: NerveStatus) => {
-    const store = useNeuralStore.getState();
-    store.setSelectedNerve(nerve.name);
-    store.setDetailsLoading(true);
-    store.setSelectedNerveDetails(null);
-    getClient()
-      .getNerveDetails(nerve.name)
-      .then((details) => {
-        useNeuralStore.getState().setSelectedNerveDetails(details);
-        useNeuralStore.getState().setDetailsLoading(false);
-      })
-      .catch(() => {
-        useNeuralStore.getState().setDetailsLoading(false);
-      });
-  };
-
   const filters: { key: FilterStatus; label: string; color: string }[] = [
     { key: "all", label: "All", color: "rgba(255,255,255,0.6)" },
-    { key: "pass", label: "Pass", color: "#5bf5a0" },
+    { key: "pass", label: "Pass", color: "#00ff88" },
     { key: "fail", label: "Fail", color: "#f55b5b" },
     { key: "testing", label: "Testing", color: "#f5d05b" },
   ];
@@ -66,7 +51,7 @@ export function NervesPanel({ open, onClose }: NervesPanelProps) {
           width: 400,
           maxWidth: "90vw",
           background: "rgba(14, 14, 22, 0.92)",
-          borderLeft: "1px solid rgba(91, 245, 160, 0.25)",
+          borderLeft: "1px solid rgba(0, 212, 255, 0.25)",
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
           transform: open ? "translateX(0)" : "translateX(100%)",
@@ -79,7 +64,7 @@ export function NervesPanel({ open, onClose }: NervesPanelProps) {
           className="flex items-center justify-between shrink-0"
           style={{
             padding: "20px 24px",
-            borderBottom: "1px solid rgba(91, 245, 160, 0.2)",
+            borderBottom: "1px solid rgba(0, 212, 255, 0.2)",
             background: "rgba(10, 10, 16, 0.5)",
           }}
         >
@@ -118,12 +103,12 @@ export function NervesPanel({ open, onClose }: NervesPanelProps) {
               width: "100%",
               padding: "8px 12px",
               borderRadius: 6,
-              border: "1px solid rgba(91, 245, 160, 0.15)",
+              border: "1px solid rgba(0, 212, 255, 0.15)",
               background: "rgba(0,0,0,0.3)",
               color: "rgba(255,255,255,0.85)",
               fontSize: 12,
               outline: "none",
-              fontFamily: "SF Mono, Fira Code, monospace",
+              fontFamily: "Share Tech Mono, JetBrains Mono, monospace",
             }}
           />
           <div className="flex gap-2" style={{ marginTop: 8, paddingBottom: 4 }}>
@@ -166,7 +151,7 @@ export function NervesPanel({ open, onClose }: NervesPanelProps) {
             </div>
           )}
           {filtered.map((nerve) => (
-            <NerveRow key={nerve.name} nerve={nerve} onClick={() => handleNerveClick(nerve)} />
+            <NerveRow key={nerve.name} nerve={nerve} onClick={() => loadNerveDetails(nerve.name)} />
           ))}
         </div>
       </div>
@@ -175,17 +160,9 @@ export function NervesPanel({ open, onClose }: NervesPanelProps) {
 }
 
 function NerveRow({ nerve, onClick }: { nerve: NerveStatus; onClick: () => void }) {
-  const scoreRaw = nerve.score;
-  const scorePercent = scoreRaw > 1 ? Math.round(scoreRaw) : Math.round(scoreRaw * 100);
-  const scoreColor = scorePercent >= 70 ? "#5bf5a0" : scorePercent >= 40 ? "#f5d05b" : "#f55b5b";
-  const statusColor =
-    nerve.status === "pass"
-      ? "#5bf5a0"
-      : nerve.status === "fail"
-        ? "#f55b5b"
-        : nerve.status === "testing"
-          ? "#f5d05b"
-          : "rgba(255,255,255,0.3)";
+  const scorePercent = normalizeScore(nerve.score);
+  const nerveScoreColor = scoreColor(scorePercent);
+  const nerveStatusColor = statusColor(nerve.status);
 
   return (
     <div
@@ -199,8 +176,8 @@ function NerveRow({ nerve, onClick }: { nerve: NerveStatus; onClick: () => void 
         transition: "all 0.15s",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = "rgba(91, 245, 160, 0.04)";
-        e.currentTarget.style.borderColor = "rgba(91, 245, 160, 0.15)";
+        e.currentTarget.style.background = "rgba(0, 212, 255, 0.04)";
+        e.currentTarget.style.borderColor = "rgba(0, 212, 255, 0.15)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.background = "transparent";
@@ -212,8 +189,8 @@ function NerveRow({ nerve, onClick }: { nerve: NerveStatus; onClick: () => void 
           <div
             className="w-2 h-2 rounded-full"
             style={{
-              background: statusColor,
-              boxShadow: `0 0 6px ${statusColor}`,
+              background: nerveStatusColor,
+              boxShadow: `0 0 6px ${nerveStatusColor}`,
               animation:
                 nerve.status === "testing" ? "pulse-dot 1.5s ease-in-out infinite" : "none",
             }}
@@ -223,13 +200,13 @@ function NerveRow({ nerve, onClick }: { nerve: NerveStatus; onClick: () => void 
               color: "rgba(255,255,255,0.85)",
               fontSize: 12,
               fontWeight: 600,
-              fontFamily: "SF Mono, Fira Code, monospace",
+              fontFamily: "Share Tech Mono, JetBrains Mono, monospace",
             }}
           >
             {nerve.name}
           </span>
         </div>
-        <span style={{ color: scoreColor, fontSize: 13, fontWeight: 800 }}>{scorePercent}%</span>
+        <span style={{ color: nerveScoreColor, fontSize: 13, fontWeight: 800 }}>{scorePercent}%</span>
       </div>
 
       {/* Score bar */}
@@ -238,7 +215,7 @@ function NerveRow({ nerve, onClick }: { nerve: NerveStatus; onClick: () => void 
           style={{
             height: "100%",
             width: `${Math.min(scorePercent, 100)}%`,
-            background: scoreColor,
+            background: nerveScoreColor,
             borderRadius: 2,
             transition: "width 0.5s",
           }}

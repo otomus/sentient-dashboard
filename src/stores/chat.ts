@@ -30,6 +30,7 @@ interface ChatStore {
 }
 
 let msgCounter = 0;
+const MAX_MESSAGES = 500;
 
 /**
  * Zustand store managing chat messages and typing indicator.
@@ -40,34 +41,34 @@ export const useChatStore = create<ChatStore>((set) => ({
   isTyping: false,
 
   addUserMessage: (text, source) =>
-    set((state) => ({
-      messages: [
+    set((state) => {
+      const messages: ChatMessage[] = [
         ...state.messages,
         {
           id: `msg-${++msgCounter}`,
-          role: "user",
+          role: "user" as const,
           text,
           source,
           timestamp: Date.now(),
         },
-      ],
-      isTyping: true,
-    })),
+      ];
+      return { messages: messages.slice(-MAX_MESSAGES), isTyping: true };
+    }),
 
   addAssistantMessage: (envelope) =>
-    set((state) => ({
-      messages: [
+    set((state) => {
+      const messages: ChatMessage[] = [
         ...state.messages,
         {
           id: `msg-${++msgCounter}`,
-          role: "assistant",
+          role: "assistant" as const,
           text: envelope.content.text,
           envelope,
           timestamp: Date.now(),
         },
-      ],
-      isTyping: false,
-    })),
+      ];
+      return { messages: messages.slice(-MAX_MESSAGES), isTyping: false };
+    }),
 
   setTyping: (typing) => set({ isTyping: typing }),
 

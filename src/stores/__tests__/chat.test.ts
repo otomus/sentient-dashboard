@@ -1,15 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useChatStore } from "../chat";
-import type { SentientEnvelope } from "@otomus/sentient-sdk";
+import { envelopeFactory } from "../../test/factories";
 
 const initialState = {
   messages: [] as [],
   isTyping: false,
 };
-
-function makeEnvelope(text: string, media?: Record<string, unknown>): SentientEnvelope {
-  return { content: { text }, media } as unknown as SentientEnvelope;
-}
 
 describe("useChatStore", () => {
   beforeEach(() => {
@@ -63,7 +59,7 @@ describe("useChatStore", () => {
 
   describe("addAssistantMessage", () => {
     it("appends an assistant message with text from envelope", () => {
-      const envelope = makeEnvelope("hi there");
+      const envelope = envelopeFactory.build({ content: { text: "hi there", markdown: false, tone: "neutral" } });
       useChatStore.getState().addAssistantMessage(envelope);
       const state = useChatStore.getState();
       expect(state.messages).toHaveLength(1);
@@ -75,7 +71,7 @@ describe("useChatStore", () => {
 
     it("sets isTyping to false", () => {
       useChatStore.setState({ isTyping: true });
-      useChatStore.getState().addAssistantMessage(makeEnvelope("reply"));
+      useChatStore.getState().addAssistantMessage(envelopeFactory.build());
       expect(useChatStore.getState().isTyping).toBe(false);
     });
   });
@@ -95,7 +91,7 @@ describe("useChatStore", () => {
 
   describe("appendAudioToLast", () => {
     it("appends audio to the last assistant message with an envelope", () => {
-      const envelope = makeEnvelope("hello");
+      const envelope = envelopeFactory.build();
       useChatStore.getState().addAssistantMessage(envelope);
       useChatStore.getState().appendAudioToLast("base64data", "audio/mp3");
 
@@ -107,8 +103,8 @@ describe("useChatStore", () => {
     });
 
     it("targets the last assistant message, not earlier ones", () => {
-      useChatStore.getState().addAssistantMessage(makeEnvelope("first"));
-      useChatStore.getState().addAssistantMessage(makeEnvelope("second"));
+      useChatStore.getState().addAssistantMessage(envelopeFactory.build({ content: { text: "first", markdown: false, tone: "neutral" } }));
+      useChatStore.getState().addAssistantMessage(envelopeFactory.build({ content: { text: "second", markdown: false, tone: "neutral" } }));
       useChatStore.getState().appendAudioToLast("audio2", "audio/wav");
 
       const messages = useChatStore.getState().messages;
@@ -120,7 +116,7 @@ describe("useChatStore", () => {
     });
 
     it("skips user messages when searching for last assistant", () => {
-      useChatStore.getState().addAssistantMessage(makeEnvelope("assistant"));
+      useChatStore.getState().addAssistantMessage(envelopeFactory.build());
       useChatStore.getState().addUserMessage("user msg");
       useChatStore.getState().appendAudioToLast("audiodata", "audio/ogg");
 

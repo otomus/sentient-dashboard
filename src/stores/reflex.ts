@@ -12,11 +12,13 @@ export interface LogEntry {
   type: "thought" | "action" | "result" | "tool" | "system" | "error";
   text: string;
   timestamp: number;
+  /** Full raw event payload for inspection. */
+  raw?: unknown;
 }
 
 interface ReflexStore {
   logs: LogEntry[];
-  log: (type: LogEntry["type"], text: string) => void;
+  log: (type: LogEntry["type"], text: string, raw?: unknown) => void;
   clear: () => void;
 }
 
@@ -29,11 +31,11 @@ let logCounter = 0;
 export const useReflexStore = create<ReflexStore>((set) => ({
   logs: [],
 
-  log: (type, text) =>
+  log: (type, text, raw?) =>
     set((state) => ({
       logs: [
         ...state.logs.slice(-500),
-        { id: `log-${++logCounter}`, type, text, timestamp: Date.now() },
+        { id: `log-${++logCounter}`, type, text, timestamp: Date.now(), raw },
       ],
     })),
 

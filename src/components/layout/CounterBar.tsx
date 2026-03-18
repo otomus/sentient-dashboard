@@ -1,5 +1,8 @@
+import { useMemo } from "react";
 import { useNeuralStore } from "../../stores/neural";
 import { useMemoryStore } from "../../stores/memory";
+import { useSystemStore } from "../../stores/system";
+import { BRAIN_STATE_COLORS } from "../../utils/colors";
 
 interface CounterProps {
   label: string;
@@ -9,6 +12,7 @@ interface CounterProps {
   sub?: string;
 }
 
+/** A single metric counter widget with label, value, and optional sub-text. */
 function Counter({ label, value, color, onClick, sub }: CounterProps) {
   return (
     <div
@@ -22,7 +26,7 @@ function Counter({ label, value, color, onClick, sub }: CounterProps) {
         WebkitBackdropFilter: "blur(16px)",
         cursor: onClick ? "pointer" : "default",
         transition: "border-color 0.2s, box-shadow 0.2s",
-        minWidth: 120,
+        minWidth: 100,
       }}
       onMouseEnter={(e) => {
         if (!onClick) return;
@@ -52,7 +56,7 @@ function Counter({ label, value, color, onClick, sub }: CounterProps) {
             color,
             fontSize: 24,
             fontWeight: 800,
-            fontFamily: "SF Mono, Fira Code, monospace",
+            fontFamily: "Share Tech Mono, JetBrains Mono, monospace",
             lineHeight: 1,
           }}
         >
@@ -68,33 +72,51 @@ function Counter({ label, value, color, onClick, sub }: CounterProps) {
   );
 }
 
+/** Formats a duration in seconds as "Xh Ym" or "Xm". */
+function formatUptime(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
 interface CounterBarProps {
   onNervesClick: () => void;
 }
 
+/** Horizontal bar of metric counters (nerves, brain state, events, system stats). */
 export function CounterBar({ onNervesClick }: CounterBarProps) {
   const nerves = useNeuralStore((s) => s.nerves);
   const brainState = useNeuralStore((s) => s.brainState);
-  const events = useNeuralStore((s) => s.events);
+  const eventsLength = useNeuralStore((s) => s.events.length);
   const episodes = useMemoryStore((s) => s.episodes);
+  const stats = useSystemStore((s) => s.stats);
 
-  const passCount = nerves.filter((n) => n.status === "pass").length;
-  const failCount = nerves.filter((n) => n.status === "fail").length;
-  const testingCount = nerves.filter((n) => n.status === "testing").length;
+  const { passCount, failCount, testingCount } = useMemo(() => {
+    let pass = 0, fail = 0, testing = 0;
+    for (const n of nerves) {
+      if (n.status === "pass") pass++;
+      else if (n.status === "fail") fail++;
+      else if (n.status === "testing") testing++;
+    }
+    return { passCount: pass, failCount: fail, testingCount: testing };
+  }, [nerves]);
 
-  const stateColors: Record<string, string> = {
-    idle: "#555568",
-    thinking: "#a78bfa",
-    acting: "#5bf5a0",
-    responding: "#c084fc",
-  };
+  // Read cpu/memory/uptime from raw stats (server sends {cpu, memory, uptime})
+  const raw = stats as unknown as Record<string, number> | null;
+  const cpu = raw?.cpu ?? raw?.cpuLoad;
+  const mem = raw?.memory ?? raw?.memoryUsed;
+  const uptime = raw?.uptime;
 
   return (
-    <div className="fixed z-30 flex items-center gap-3" style={{ top: 80, left: 64, right: 64 }}>
+    <div
+      className="fixed z-30 flex items-center gap-3 justify-end"
+      style={{ top: 80, right: 64, left: 480 }}
+    >
       <Counter
         label="Nerves"
         value={nerves.length}
-        color="#5bf5a0"
+        color="#00ff88"
         onClick={onNervesClick}
         sub={
           passCount > 0
@@ -105,10 +127,19 @@ export function CounterBar({ onNervesClick }: CounterBarProps) {
       <Counter
         label="Brain"
         value={brainState.toUpperCase()}
-        color={stateColors[brainState] || "#555568"}
+        color={BRAIN_STATE_COLORS[brainState] || "#4a4a6a"}
       />
-      <Counter label="Episodes" value={episodes.length} color="#a78bfa" />
-      <Counter label="Events" value={events.length} color="#5bc8f5" sub="last 100" />
+      <Counter label="Episodes" value={episodes.length} color="#00d4ff" />
+      <Counter label="Events" value={eventsLength} color="#00a8cc" sub="last 100" />
+      {cpu != null && (
+        <Counter label="CPU" value={`${Math.round(cpu)}%`} color="#f5d05b" />
+      )}
+      {mem != null && (
+        <Counter label="Memory" value={`${Math.round(mem)}%`} color="#f5a05b" />
+      )}
+      {uptime != null && (
+        <Counter label="Uptime" value={formatUptime(uptime)} color="#00a8cc" />
+      )}
     </div>
   );
 }

@@ -21,9 +21,294 @@ export function getClient(): SentientClient {
   return client;
 }
 
+// ────────────────────────────────────────────
+// Store accessor shortcuts (resolved once per init, not per event)
+// ────────────────────────────────────────────
+
+type StoreAccessors = ReturnType<typeof createStoreAccessors>;
+
+function createStoreAccessors() {
+  return {
+    conn: useConnectionStore.getState,
+    neural: useNeuralStore.getState,
+    chat: useChatStore.getState,
+    reflex: useReflexStore.getState,
+    senses: useSensesStore.getState,
+    memory: useMemoryStore.getState,
+    system: useSystemStore.getState,
+  };
+}
+
+// ────────────────────────────────────────────
+// Dream-stage mapping
+// ────────────────────────────────────────────
+
+const DREAM_STAGES = new Set([
+  "qualifying",
+  "qualified",
+  "qualification_failed",
+  "qualification_error",
+  "reconciling",
+  "reconciliation_start",
+  "reconciliation_done",
+  "pruning",
+  "finetuning",
+  "finetuning_start",
+  "finetuning_done",
+  "personality_reflection",
+  "consolidation",
+]);
+
+/**
+ * Maps a raw server stage string to the DreamStage enum value used by the store.
+ * Returns `null` for terminal stages that should clear the dream state.
+ */
+function toDreamStage(stage: string): DreamStage {
+  if (stage === "consolidation" || stage === "reconciliation_start") return "reconciling";
+  if (stage === "reconciliation_done" || stage === "finetuning_done") return null;
+  if (stage === "finetuning_start") return "finetuning";
+  if (stage === "qualification_error") return "qualification_failed";
+  return stage as NonNullable<DreamStage>;
+}
+
+/**
+ * Wraps event data with its channel name to produce a complete raw envelope
+ * matching what the server originally sent.
+ */
+/**
+ * Reconstructs the full server message shape (channel + data + timestamp)
+ * so the log drawer can display the complete payload.
+ */
+function rawEnvelope(channel: string, data: unknown): Record<string, unknown> {
+  const ts = typeof data === "object" && data !== null && "timestamp" in data
+    ? (data as Record<string, unknown>).timestamp
+    : undefined;
+  return { channel, data, ...(ts !== undefined && { timestamp: ts }) };
+}
+
+// ────────────────────────────────────────────
+// Channel handler registration
+// ────────────────────────────────────────────
+
+/** Registers connection lifecycle handlers. */
+function registerConnectionHandlers(c: SentientClient, { conn, reflex }: StoreAccessors): void {
+  c.on("connected", () => {
+    conn().setOnline();
+    reflex().log("system", "Connected to Synaptic Bridge");
+  });
+
+  c.on("disconnected", () => {
+    conn().setOffline();
+    reflex().log("error", "Disconnected — reconnecting...");
+  });
+}
+
+/** Registers brain event handlers (thought, action, response, task, audio). */
+function registerBrainHandlers(c: SentientClient, { neural, chat, reflex }: StoreAccessors): void {
+  c.on(Channel.BRAIN_THOUGHT, (data) => {
+    const stage = data.stage;
+    const thoughtMsg = (data as unknown as Record<string, string>).message;
+    neural().addEvent({ type: "thought", stage, nerve: data.nerve });
+
+    if (DREAM_STAGES.has(stage)) {
+      neural().setDream(toDreamStage(stage), data.nerve || null, thoughtMsg || null);
+      reflex().log("system", `[DREAM] ${thoughtMsg || stage}${data.nerve ? ` → ${data.nerve}` : ""}`, rawEnvelope(Channel.BRAIN_THOUGHT, data));
+    } else {
+      if (neural().dreamStage !== null) neural().setDream(null);
+      neural().setBrainState(stage === "responding" ? "responding" : "thinking");
+      chat().setTyping(true);
+    }
+
+    reflex().log("thought", `[${stage}] ${thoughtMsg || data.task || data.nerve || ""}`, rawEnvelope(Channel.BRAIN_THOUGHT, data));
+  });
+
+  c.on(Channel.BRAIN_ACTION, (data) => {
+    neural().addEvent({ type: "action", nerve: data.nerve });
+    if (neural().dreamStage !== null) neural().setDream(null);
+    neural().setActiveNerve(data.nerve);
+    neural().setBrainState("acting");
+    reflex().log("action", `Invoke nerve: ${data.nerve} ${data.args || ""}`, rawEnvelope(Channel.BRAIN_ACTION, data));
+  });
+
+  c.on(Channel.BRAIN_RESPONSE, (envelope) => {
+    neural().addEvent({ type: "response" });
+    if (neural().dreamStage !== null) neural().setDream(null);
+    neural().setBrainState("idle");
+    neural().setActiveNerve(null);
+
+    const unwrapped = unwrapJsonResponse(envelope);
+    chat().addAssistantMessage(unwrapped);
+    reflex().log("result", JSON.stringify(unwrapped.content), rawEnvelope(Channel.BRAIN_RESPONSE, envelope));
+  });
+
+  c.on(Channel.BRAIN_TASK, (data) => {
+    if (data.task && !sentTasks.delete(data.task)) {
+      const prefix = data.source && data.source !== "dashboard" ? `[${data.source}] ` : "";
+      chat().addUserMessage(`${prefix}${data.task}`, data.source);
+    }
+  });
+
+  c.on(Channel.BRAIN_AUDIO, (data) => {
+    if (data.audio_b64) {
+      chat().appendAudioToLast(data.audio_b64, data.audio_mime || "audio/wav");
+    }
+  });
+}
+
+/** Registers nerve event handlers (result, qualification). */
+function registerNerveHandlers(c: SentientClient, { neural, reflex }: StoreAccessors): void {
+  c.on(Channel.NERVE_RESULT, (data) => {
+    neural().addEvent({ type: "result", nerve: data.nerve });
+    try {
+      const parsed = JSON.parse(data.output) as Record<string, string>;
+      if (parsed.tool) reflex().log("result", `[${data.nerve}] tool: ${parsed.tool}`, rawEnvelope(Channel.NERVE_RESULT, data));
+      reflex().log(
+        "result",
+        `[${data.nerve}] ${(parsed.response || data.output).substring(0, 200)}`,
+        rawEnvelope(Channel.NERVE_RESULT, data),
+      );
+    } catch {
+      // output is not JSON — log raw
+      reflex().log("result", `[${data.nerve}] ${data.output.substring(0, 200)}`, rawEnvelope(Channel.NERVE_RESULT, data));
+    }
+  });
+
+  c.on(Channel.NERVE_QUALIFICATION, (data) => {
+    const nerveList = data.nerves || [];
+    neural().updateNerves(nerveList);
+
+    const testing = nerveList.filter((n: { status: string }) => n.status === "testing");
+    if (testing.length > 0 && !neural().dreamStage) {
+      neural().setDream("qualifying", testing[0].name, `Testing ${testing.length} nerve(s)`);
+    }
+  });
+
+  c.on(Channel.MCP_TOOL_CALL, (data) => {
+    if (data.error) {
+      reflex().log("error", `[MCP] ${data.tool} ERROR: ${data.error}`, rawEnvelope(Channel.MCP_TOOL_CALL, data));
+    } else {
+      reflex().log(
+        "tool",
+        `[MCP] ${data.tool} → ${(data.result_preview || "").substring(0, 120)} (${data.elapsed}s)`,
+        rawEnvelope(Channel.MCP_TOOL_CALL, data),
+      );
+    }
+  });
+}
+
+/** Registers sense event handlers (status, config, sight, STT). */
+function registerSenseHandlers(c: SentientClient, { senses, reflex }: StoreAccessors): void {
+  c.on(Channel.SENSE_STATUS, (data) => senses().updateCalibration(data));
+  c.on(Channel.SENSE_SAVED_CONFIG, (data) => senses().restoreConfig(data));
+
+  c.on(Channel.SENSE_SIGHT_FRAME, (data) => {
+    const img = data.image || data.image_b64;
+    if (img) senses().setSightFrame(img, data.source);
+  });
+
+  c.on(Channel.SENSE_STT_RESULT, (data) => {
+    if (data.text) reflex().log("system", `Voice: "${data.text}"`, rawEnvelope(Channel.SENSE_STT_RESULT, data));
+  });
+}
+
+/** Registers memory, system, and catch-all handlers. */
+function registerSystemHandlers(c: SentientClient, { memory, system, conn, reflex }: StoreAccessors): void {
+  c.on(Channel.MEMORY_STATE, (data) => memory().update(data));
+  c.on(Channel.SYSTEM_STATS, (data) => system().update(data));
+
+  // Server sends system:status (not system:stats) with {cpu, memory, uptime}
+  c.on(Channel.SYSTEM_STATUS, (data) => {
+    system().update(data as unknown as import("@otomus/sentient-sdk").SystemStats);
+  });
+
+  c.on(Channel.SYSTEM_KILL, () => {
+    conn().setKilled();
+    reflex().log("error", "KILL SWITCH ACTIVATED");
+  });
+}
+
+/** Channels already handled by dedicated listeners — skip in the catch-all. */
+const HANDLED_CHANNELS = new Set<string>([
+  Channel.SYSTEM_STATS,
+  Channel.SYSTEM_STATUS,
+  Channel.SENSE_SIGHT_FRAME,
+  Channel.SENSE_STATUS,
+  Channel.SENSE_SAVED_CONFIG,
+  Channel.BRAIN_THOUGHT,
+  Channel.BRAIN_ACTION,
+  Channel.BRAIN_RESPONSE,
+  Channel.BRAIN_TASK,
+  Channel.BRAIN_AUDIO,
+  Channel.NERVE_RESULT,
+  Channel.NERVE_QUALIFICATION,
+  Channel.MCP_TOOL_CALL,
+  "connected",
+  "disconnected",
+]);
+
+/**
+ * Registers a catch-all handler that logs any channel not already handled
+ * by a dedicated listener (e.g. TOOL-HEAL, ADAPTER-TUNE, CONSOLIDATE).
+ */
+function registerCatchAllHandler(c: SentientClient, { reflex }: StoreAccessors): void {
+  c.onAny((channel, data) => {
+    if (HANDLED_CHANNELS.has(channel)) return;
+
+    const summary = typeof data === "object" && data !== null
+      ? JSON.stringify(data).substring(0, 300)
+      : String(data);
+    reflex().log("system", `[${channel}] ${summary}`, rawEnvelope(channel, data));
+  });
+}
+
+// ────────────────────────────────────────────
+// JSON response unwrapping
+// ────────────────────────────────────────────
+
+interface EnvelopeContent {
+  text: string;
+  markdown?: boolean;
+}
+
+interface EnvelopeLike {
+  content: EnvelopeContent;
+  [key: string]: unknown;
+}
+
+/**
+ * Server sometimes wraps text in `{"format":"text","response":"..."}`.
+ * Detects and unwraps so chat shows the actual text.
+ */
+function unwrapJsonResponse<T extends EnvelopeLike>(envelope: T): T {
+  const text = envelope.content.text;
+  if (!text || !text.startsWith("{")) return envelope;
+
+  try {
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    if (typeof parsed.response === "string") {
+      return {
+        ...envelope,
+        content: {
+          ...envelope.content,
+          text: parsed.response,
+          markdown: envelope.content.markdown || parsed.format === "markdown",
+        },
+      };
+    }
+  } catch {
+    // Not JSON — use as-is
+  }
+  return envelope;
+}
+
+// ────────────────────────────────────────────
+// Public API
+// ────────────────────────────────────────────
+
 /**
  * Creates and connects the singleton SentientClient, wiring all channel listeners
  * to the corresponding Zustand stores. No-ops if already initialized.
+ *
  * @param url - WebSocket URL to the sentient-core server (e.g. "ws://host:4000").
  * @returns The connected SentientClient instance.
  */
@@ -46,170 +331,14 @@ export function initClient(url: string): SentientClient {
     ],
   });
 
-  const conn = useConnectionStore.getState;
-  const neural = useNeuralStore.getState;
-  const chat = useChatStore.getState;
-  const reflex = useReflexStore.getState;
-  const senses = useSensesStore.getState;
-  const memory = useMemoryStore.getState;
-  const system = useSystemStore.getState;
+  const stores = createStoreAccessors();
 
-  // Connection
-  client.on("connected", () => {
-    conn().setOnline();
-    reflex().log("system", "Connected to Synaptic Bridge");
-  });
-
-  client.on("disconnected", () => {
-    conn().setOffline();
-    reflex().log("error", "Disconnected — reconnecting...");
-  });
-
-  // Brain events
-  const DREAM_STAGES = new Set([
-    "qualifying",
-    "qualified",
-    "qualification_failed",
-    "qualification_error",
-    "reconciling",
-    "reconciliation_start",
-    "reconciliation_done",
-    "pruning",
-    "finetuning",
-    "finetuning_start",
-    "finetuning_done",
-    "personality_reflection",
-    "consolidation",
-  ]);
-
-  client.on(Channel.BRAIN_THOUGHT, (data) => {
-    const stage = data.stage;
-    neural().addEvent({ type: "thought", stage, nerve: data.nerve });
-
-    if (DREAM_STAGES.has(stage)) {
-      // Map to dream stage
-      const dreamStage =
-        stage === "consolidation" || stage === "reconciliation_start"
-          ? "reconciling"
-          : stage === "reconciliation_done" || stage === "finetuning_done"
-            ? null
-            : stage === "finetuning_start"
-              ? "finetuning"
-              : stage === "qualification_error"
-                ? "qualification_failed"
-                : (stage as NonNullable<DreamStage>);
-      const msg = (data as unknown as Record<string, string>).message;
-      neural().setDream(dreamStage, data.nerve || null, msg || null);
-      reflex().log("system", `[DREAM] ${msg || stage}${data.nerve ? ` → ${data.nerve}` : ""}`);
-    } else {
-      neural().setBrainState(stage === "responding" ? "responding" : "thinking");
-      chat().setTyping(true);
-    }
-
-    reflex().log("thought", `[${stage}] ${data.task || data.nerve || ""}`);
-  });
-
-  client.on(Channel.BRAIN_ACTION, (data) => {
-    neural().addEvent({ type: "action", nerve: data.nerve });
-    neural().setActiveNerve(data.nerve);
-    neural().setBrainState("acting");
-    reflex().log("action", `Invoke nerve: ${data.nerve} ${data.args || ""}`);
-  });
-
-  client.on(Channel.BRAIN_RESPONSE, (envelope) => {
-    neural().addEvent({ type: "response" });
-    neural().setBrainState("idle");
-    neural().setActiveNerve(null);
-    chat().addAssistantMessage(envelope);
-    reflex().log("result", envelope.content.text.substring(0, 120));
-  });
-
-  client.on(Channel.BRAIN_TASK, (data) => {
-    if (data.task && !sentTasks.delete(data.task)) {
-      const prefix = data.source && data.source !== "dashboard" ? `[${data.source}] ` : "";
-      chat().addUserMessage(`${prefix}${data.task}`, data.source);
-    }
-  });
-
-  client.on(Channel.BRAIN_AUDIO, (data) => {
-    if (data.audio_b64) {
-      chat().appendAudioToLast(data.audio_b64, data.audio_mime || "audio/wav");
-    }
-  });
-
-  // Nerves
-  client.on(Channel.NERVE_RESULT, (data) => {
-    neural().addEvent({ type: "result", nerve: data.nerve });
-    try {
-      const parsed = JSON.parse(data.output);
-      if (parsed.tool) reflex().log("result", `[${data.nerve}] tool: ${parsed.tool}`);
-      reflex().log(
-        "result",
-        `[${data.nerve}] ${(parsed.response || data.output).substring(0, 200)}`,
-      );
-    } catch {
-      reflex().log("result", `[${data.nerve}] ${data.output.substring(0, 200)}`);
-    }
-  });
-
-  client.on(Channel.NERVE_QUALIFICATION, (data) => {
-    const nerveList = data.nerves || [];
-    neural().updateNerves(nerveList);
-
-    // Auto-detect dream state from testing nerves
-    const testing = nerveList.filter((n: { status: string }) => n.status === "testing");
-    if (testing.length > 0) {
-      const current = neural().dreamStage;
-      if (!current) {
-        neural().setDream("qualifying", testing[0].name, `Testing ${testing.length} nerve(s)`);
-      }
-    }
-  });
-
-  client.on(Channel.MCP_TOOL_CALL, (data) => {
-    if (data.error) {
-      reflex().log("error", `[MCP] ${data.tool} ERROR: ${data.error}`);
-    } else {
-      reflex().log(
-        "tool",
-        `[MCP] ${data.tool} → ${(data.result_preview || "").substring(0, 120)} (${data.elapsed}s)`,
-      );
-    }
-  });
-
-  // Senses
-  client.on(Channel.SENSE_STATUS, (data) => {
-    senses().updateCalibration(data);
-  });
-
-  client.on(Channel.SENSE_SAVED_CONFIG, (data) => {
-    senses().restoreConfig(data);
-  });
-
-  client.on(Channel.SENSE_SIGHT_FRAME, (data) => {
-    const img = data.image || data.image_b64;
-    if (img) senses().setSightFrame(img, data.source);
-  });
-
-  client.on(Channel.SENSE_STT_RESULT, (data) => {
-    if (data.text) {
-      reflex().log("system", `Voice: "${data.text}"`);
-    }
-  });
-
-  // Memory & System
-  client.on(Channel.MEMORY_STATE, (data) => {
-    memory().update(data);
-  });
-
-  client.on(Channel.SYSTEM_STATS, (data) => {
-    system().update(data);
-  });
-
-  client.on(Channel.SYSTEM_KILL, () => {
-    conn().setKilled();
-    reflex().log("error", "KILL SWITCH ACTIVATED");
-  });
+  registerConnectionHandlers(client, stores);
+  registerBrainHandlers(client, stores);
+  registerNerveHandlers(client, stores);
+  registerSenseHandlers(client, stores);
+  registerSystemHandlers(client, stores);
+  registerCatchAllHandler(client, stores);
 
   client.connect();
   return client;
@@ -218,9 +347,10 @@ export function initClient(url: string): SentientClient {
 /**
  * Sends a task to the agent and records it locally so the returning
  * BRAIN_TASK echo is not duplicated in the chat history.
+ *
  * @param text - The task/message text to send.
  */
-export function sendTask(text: string) {
+export function sendTask(text: string): void {
   sentTasks.add(text);
   getClient().send(text);
 }

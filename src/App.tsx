@@ -8,6 +8,7 @@ import { LogDrawer } from "./components/reflex/LogDrawer";
 import { NerveDetail } from "./components/nerves/NerveDetail";
 import { NervesPanel } from "./components/nerves/NervesPanel";
 import { DreamPanel } from "./components/nerves/DreamPanel";
+import { PerfMonitor } from "./components/layout/PerfMonitor";
 
 /**
  * Root application component. Initializes the WebSocket connection on mount
@@ -30,7 +31,7 @@ export default function App() {
 
   return (
     <>
-      {/* 2D SVG brain — center stage */}
+      {/* 2D SVG Tron disc — center stage */}
       <Brain2D />
 
       {/* Header bar */}
@@ -53,6 +54,9 @@ export default function App() {
 
       {/* Dream state panel */}
       <DreamPanel />
+
+      {/* Performance monitor */}
+      <PerfMonitor />
     </>
   );
 }
