@@ -7,8 +7,6 @@ import type {
   MemoryState,
   SenseCalibration,
   EnvelopeContent,
-  EnvelopeMedia,
-  EnvelopeRich,
 } from "@otomus/sentient-sdk";
 import type { ChatMessage } from "../stores/chat";
 import type { NeuralEvent } from "../stores/neural";

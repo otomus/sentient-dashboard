@@ -283,7 +283,6 @@ interface EnvelopeContent {
 
 interface EnvelopeLike {
   content: EnvelopeContent;
-  [key: string]: unknown;
 }
 
 /**
