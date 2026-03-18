@@ -138,7 +138,7 @@ export function SettingsCog({ onConnect }: SettingsCogProps) {
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="wss://host:port or host:port"
+            placeholder="wss://host:port"
             style={{
               width: "100%",
               padding: "8px 12px",

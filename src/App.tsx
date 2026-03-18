@@ -12,19 +12,17 @@ import { DreamPanel } from "./components/nerves/DreamPanel";
 import { PerfMonitor } from "./components/layout/PerfMonitor";
 
 /**
- * Converts a server address into a WebSocket URL.
- * Accepts full URLs (ws://, wss://) or plain host:port — in which case
- * the protocol is inferred from the current page.
+ * Converts a server address into a secure WebSocket URL.
+ * Accepts full wss:// URLs or plain host:port.
+ * Strips ws:// and upgrades to wss:// if provided.
  *
- * @param address - Full WS URL or host:port (e.g. "wss://example.com:3000/" or "localhost:4000").
- * @returns A ws:// or wss:// URL.
+ * @param address - Full wss:// URL or host:port (e.g. "wss://example.com:3000/" or "localhost:4000").
+ * @returns A wss:// URL.
  */
 function buildWsUrl(address: string): string {
-  if (address.startsWith("ws://") || address.startsWith("wss://")) {
-    return address;
-  }
-  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${address}`;
+  if (address.startsWith("wss://")) return address;
+  const stripped = address.replace(/^wss?:\/\//, "");
+  return `wss://${stripped}`;
 }
 
 /**
