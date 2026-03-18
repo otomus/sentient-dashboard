@@ -1,5 +1,6 @@
 import { useConnectionStore } from "../../stores/connection";
 import { useNeuralStore } from "../../stores/neural";
+import { SettingsCog } from "./SettingsCog";
 
 const LETTERS = "ARQITECT".split("");
 const LETTER_DUR = 0.4; // seconds per letter draw
@@ -62,8 +63,12 @@ function ArqitectLogo() {
   );
 }
 
-/** Top navigation bar with animated ARQITECT logo and connection status indicator. */
-export function Header() {
+interface HeaderProps {
+  onConnect: (address: string) => void;
+}
+
+/** Top navigation bar with animated ARQITECT logo, connection status, and settings cog. */
+export function Header({ onConnect }: HeaderProps) {
   const status = useConnectionStore((s) => s.status);
   const dreamStage = useNeuralStore((s) => s.dreamStage);
 
@@ -94,9 +99,10 @@ export function Header() {
     >
       <ArqitectLogo />
 
-      <div className="flex items-center gap-2">
-        <div
-          className="w-2 h-2 rounded-full"
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <div
+            className="w-2 h-2 rounded-full"
           style={{
             background: dotColor,
             boxShadow: `0 0 8px ${dotColor}`,
@@ -119,6 +125,8 @@ export function Header() {
         >
           {statusLabel}
         </span>
+        </div>
+        <SettingsCog onConnect={onConnect} />
       </div>
     </header>
   );

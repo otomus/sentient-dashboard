@@ -21,6 +21,17 @@ export function getClient(): SentientClient {
   return client;
 }
 
+/**
+ * Disconnects and destroys the current client so a new one can be created.
+ * Safe to call when no client exists.
+ */
+export function resetClient(): void {
+  if (client) {
+    client.disconnect();
+    client = null;
+  }
+}
+
 // ────────────────────────────────────────────
 // Store accessor shortcuts (resolved once per init, not per event)
 // ────────────────────────────────────────────

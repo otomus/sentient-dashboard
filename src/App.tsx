@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { initClient } from "./client/sentient";
+import { useEffect, useState, useCallback } from "react";
+import { initClient, resetClient } from "./client/sentient";
+import { resolveServerAddress } from "./components/layout/SettingsCog";
 import { Brain2D } from "./components/visualization/Brain2D";
 import { Header } from "./components/layout/Header";
 import { CounterBar } from "./components/layout/CounterBar";
@@ -11,31 +12,43 @@ import { DreamPanel } from "./components/nerves/DreamPanel";
 import { PerfMonitor } from "./components/layout/PerfMonitor";
 
 /**
- * Root application component. Initializes the WebSocket connection on mount
- * and renders the synthwave dashboard layout: brain visualization, header,
- * counters, chat, log drawer, nerves panel, nerve detail modal, and dream panel.
+ * Builds a WebSocket URL from a plain server address.
+ *
+ * @param address - Host and port (e.g. "localhost:4000").
+ * @returns Full ws:// or wss:// URL matching the current page protocol.
+ */
+function buildWsUrl(address: string): string {
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${address}`;
+}
+
+/**
+ * Root application component. Resolves server address from localStorage or
+ * env var, connects the SDK client, and renders the Tron-style dashboard.
  */
 export default function App() {
   const [nervesOpen, setNervesOpen] = useState(false);
 
-  useEffect(() => {
-    const serverAddress = import.meta.env.VITE_SERVER_ADDRESS;
-    if (!serverAddress) {
-      console.error("VITE_SERVER_ADDRESS is not set — cannot connect to sentient-core server");
-      return;
-    }
-    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${proto}//${serverAddress}`;
-    initClient(wsUrl);
+  const connectToServer = useCallback((address: string) => {
+    resetClient();
+    initClient(buildWsUrl(address));
   }, []);
+
+  // Auto-connect on mount if an address is available
+  useEffect(() => {
+    const address = resolveServerAddress();
+    if (address) {
+      connectToServer(address);
+    }
+  }, [connectToServer]);
 
   return (
     <>
       {/* 2D SVG Tron disc — center stage */}
       <Brain2D />
 
-      {/* Header bar */}
-      <Header />
+      {/* Header bar with settings cog */}
+      <Header onConnect={connectToServer} />
 
       {/* Counter widgets under header */}
       <CounterBar onNervesClick={() => setNervesOpen(true)} />
