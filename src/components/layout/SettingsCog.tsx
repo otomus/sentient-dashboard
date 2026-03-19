@@ -1,34 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-
-const STORAGE_KEY = "arqitect_server_address";
-
-/**
- * Reads the saved server address from localStorage.
- *
- * @returns The stored address string, or an empty string if none is saved.
- */
-export function getSavedServerAddress(): string {
-  return localStorage.getItem(STORAGE_KEY) ?? "";
-}
-
-/**
- * Persists a server address to localStorage.
- *
- * @param address - The server address to save (e.g. "localhost:4000").
- */
-export function saveServerAddress(address: string): void {
-  localStorage.setItem(STORAGE_KEY, address);
-}
-
-/**
- * Resolves the effective server address.
- * Checks localStorage first, then falls back to the VITE_SERVER_ADDRESS env var.
- *
- * @returns The resolved address, or an empty string if neither source has a value.
- */
-export function resolveServerAddress(): string {
-  return getSavedServerAddress() || import.meta.env.VITE_SERVER_ADDRESS || "";
-}
+import {
+  getSavedServerAddress,
+  saveServerAddress,
+  resolveServerAddress,
+} from "../../utils/serverAddress";
 
 interface SettingsCogProps {
   onConnect: (address: string) => void;
@@ -36,17 +11,11 @@ interface SettingsCogProps {
 
 /** Gear icon button that opens a popover for configuring the server address. */
 export function SettingsCog({ onConnect }: SettingsCogProps) {
-  const [open, setOpen] = useState(false);
+  // Auto-open on first visit when no address is configured
+  const [open, setOpen] = useState(() => !resolveServerAddress());
   const [address, setAddress] = useState(resolveServerAddress);
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-
-  // Auto-open on first visit when no address is configured
-  useEffect(() => {
-    if (!resolveServerAddress()) {
-      setOpen(true);
-    }
-  }, []);
 
   // Focus input when opened
   useEffect(() => {

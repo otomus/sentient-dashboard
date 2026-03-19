@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { initClient, resetClient } from "./client/arqitect";
-import { resolveServerAddress } from "./components/layout/SettingsCog";
+import { resolveServerAddress } from "./utils/serverAddress";
 import { Brain2D } from "./components/visualization/Brain2D";
 import { Header } from "./components/layout/Header";
 import { CounterBar } from "./components/layout/CounterBar";
