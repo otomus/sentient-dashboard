@@ -93,7 +93,9 @@ export function CounterBar({ onNervesClick }: CounterBarProps) {
   const stats = useSystemStore((s) => s.stats);
 
   const { passCount, failCount, testingCount } = useMemo(() => {
-    let pass = 0, fail = 0, testing = 0;
+    let pass = 0,
+      fail = 0,
+      testing = 0;
     for (const n of nerves) {
       if (n.status === "pass") pass++;
       else if (n.status === "fail") fail++;
@@ -131,15 +133,9 @@ export function CounterBar({ onNervesClick }: CounterBarProps) {
       />
       <Counter label="Episodes" value={episodes.length} color="#00d4ff" />
       <Counter label="Events" value={eventsLength} color="#00a8cc" sub="last 100" />
-      {cpu != null && (
-        <Counter label="CPU" value={`${Math.round(cpu)}%`} color="#f5d05b" />
-      )}
-      {mem != null && (
-        <Counter label="Memory" value={`${Math.round(mem)}%`} color="#f5a05b" />
-      )}
-      {uptime != null && (
-        <Counter label="Uptime" value={formatUptime(uptime)} color="#00a8cc" />
-      )}
+      {cpu != null && <Counter label="CPU" value={`${Math.round(cpu)}%`} color="#f5d05b" />}
+      {mem != null && <Counter label="Memory" value={`${Math.round(mem)}%`} color="#f5a05b" />}
+      {uptime != null && <Counter label="Uptime" value={formatUptime(uptime)} color="#00a8cc" />}
     </div>
   );
 }

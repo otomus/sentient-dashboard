@@ -199,11 +199,7 @@ export function BrainCore() {
       {/* Thin disc body for depth */}
       <mesh>
         <cylinderGeometry args={[1.2, 1.2, 0.02, 128]} />
-        <meshBasicMaterial
-          color="#001a33"
-          transparent
-          opacity={0.3}
-        />
+        <meshBasicMaterial color="#001a33" transparent opacity={0.3} />
       </mesh>
     </group>
   );

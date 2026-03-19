@@ -117,7 +117,13 @@ export function Brain2D() {
       <svg
         viewBox="0 0 1920 1080"
         preserveAspectRatio="xMidYMid slice"
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          pointerEvents: "none",
+        }}
       >
         <defs>
           {/* Sky gradient */}
@@ -239,64 +245,62 @@ export function Brain2D() {
           )}
 
           {/* Concentric rings */}
-          {isDreaming ? (
-            /* DREAM MODE — pulsing rings */
-            DISC_RINGS.map((r, i) => (
-              <circle
-                key={`ring-${i}`}
-                cx={DISC_CX}
-                cy={DISC_CY}
-                r={r}
-                fill="none"
-                stroke="#00d4ff"
-                strokeWidth={i === DISC_RINGS.length - 1 ? "2" : "1"}
-                filter={i === DISC_RINGS.length - 1 ? "url(#disc-element-glow)" : undefined}
-              >
-                <animate
-                  attributeName="opacity"
-                  values="0.2;0.7;0.2"
-                  dur="3s"
-                  begin={`${i * 0.3}s`}
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="stroke-width"
-                  values={i === DISC_RINGS.length - 1 ? "1.5;3;1.5" : "0.8;1.5;0.8"}
-                  dur="3s"
-                  begin={`${i * 0.3}s`}
-                  repeatCount="indefinite"
-                />
-              </circle>
-            ))
-          ) : (
-            /* AWAKE MODE — rings with chasing dash */
-            DISC_RINGS.map((r, i) => {
-              const circumference = Math.round(2 * Math.PI * r);
-              const dashLen = Math.round(circumference * 0.15);
-              const gapLen = circumference - dashLen;
-              return (
+          {isDreaming
+            ? /* DREAM MODE — pulsing rings */
+              DISC_RINGS.map((r, i) => (
                 <circle
                   key={`ring-${i}`}
                   cx={DISC_CX}
                   cy={DISC_CY}
                   r={r}
                   fill="none"
-                  stroke={i === DISC_RINGS.length - 1 ? "url(#disc-ring-grad)" : "#00d4ff"}
+                  stroke="#00d4ff"
                   strokeWidth={i === DISC_RINGS.length - 1 ? "2" : "1"}
-                  opacity={0.3 + i * 0.12}
-                  strokeDasharray={`${dashLen} ${gapLen}`}
                   filter={i === DISC_RINGS.length - 1 ? "url(#disc-element-glow)" : undefined}
                 >
                   <animate
-                    attributeName="stroke-dashoffset"
-                    values={`${circumference};0`}
-                    dur={`${STROKE_DUR + i * 0.5}s`}
+                    attributeName="opacity"
+                    values="0.2;0.7;0.2"
+                    dur="3s"
+                    begin={`${i * 0.3}s`}
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="stroke-width"
+                    values={i === DISC_RINGS.length - 1 ? "1.5;3;1.5" : "0.8;1.5;0.8"}
+                    dur="3s"
+                    begin={`${i * 0.3}s`}
                     repeatCount="indefinite"
                   />
                 </circle>
-              );
-            })
-          )}
+              ))
+            : /* AWAKE MODE — rings with chasing dash */
+              DISC_RINGS.map((r, i) => {
+                const circumference = Math.round(2 * Math.PI * r);
+                const dashLen = Math.round(circumference * 0.15);
+                const gapLen = circumference - dashLen;
+                return (
+                  <circle
+                    key={`ring-${i}`}
+                    cx={DISC_CX}
+                    cy={DISC_CY}
+                    r={r}
+                    fill="none"
+                    stroke={i === DISC_RINGS.length - 1 ? "url(#disc-ring-grad)" : "#00d4ff"}
+                    strokeWidth={i === DISC_RINGS.length - 1 ? "2" : "1"}
+                    opacity={0.3 + i * 0.12}
+                    strokeDasharray={`${dashLen} ${gapLen}`}
+                    filter={i === DISC_RINGS.length - 1 ? "url(#disc-element-glow)" : undefined}
+                  >
+                    <animate
+                      attributeName="stroke-dashoffset"
+                      values={`${circumference};0`}
+                      dur={`${STROKE_DUR + i * 0.5}s`}
+                      repeatCount="indefinite"
+                    />
+                  </circle>
+                );
+              })}
 
           {/* Radial segment dividers */}
           {SEGMENT_LINES.map((seg, i) => (
@@ -375,12 +379,7 @@ export function Brain2D() {
           {/* Center core dot */}
           <circle cx={DISC_CX} cy={DISC_CY} r="6" fill={stateColor} opacity="0.9">
             <animate attributeName="r" values="4;8;4" dur="2s" repeatCount="indefinite" />
-            <animate
-              attributeName="opacity"
-              values="0.6;1;0.6"
-              dur="2s"
-              repeatCount="indefinite"
-            />
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
           </circle>
 
           {/* Inner core ring */}
@@ -393,7 +392,12 @@ export function Brain2D() {
             strokeWidth="1"
             opacity="0.5"
           >
-            <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.5s" repeatCount="indefinite" />
+            <animate
+              attributeName="opacity"
+              values="0.3;0.7;0.3"
+              dur="2.5s"
+              repeatCount="indefinite"
+            />
           </circle>
         </g>
 

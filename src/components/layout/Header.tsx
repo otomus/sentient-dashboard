@@ -103,28 +103,28 @@ export function Header({ onConnect }: HeaderProps) {
         <div className="flex items-center gap-2">
           <div
             className="w-2 h-2 rounded-full"
-          style={{
-            background: dotColor,
-            boxShadow: `0 0 8px ${dotColor}`,
-            animation: isDreaming
-              ? "pulse-dot 3s ease-in-out infinite"
-              : isOnline
-                ? "pulse-dot 2s ease-in-out infinite"
-                : "none",
-          }}
-        />
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: 1,
-            textTransform: "uppercase",
-            fontFamily: "Orbitron, sans-serif",
-            color: isDreaming ? "#00a8cc" : "rgba(224, 224, 240, 0.7)",
-          }}
-        >
-          {statusLabel}
-        </span>
+            style={{
+              background: dotColor,
+              boxShadow: `0 0 8px ${dotColor}`,
+              animation: isDreaming
+                ? "pulse-dot 3s ease-in-out infinite"
+                : isOnline
+                  ? "pulse-dot 2s ease-in-out infinite"
+                  : "none",
+            }}
+          />
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              fontFamily: "Orbitron, sans-serif",
+              color: isDreaming ? "#00a8cc" : "rgba(224, 224, 240, 0.7)",
+            }}
+          >
+            {statusLabel}
+          </span>
         </div>
         <SettingsCog onConnect={onConnect} />
       </div>

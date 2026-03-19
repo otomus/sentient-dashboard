@@ -59,7 +59,10 @@ describe("useReflexStore", () => {
     it("trims when exceeding 500 before appending", () => {
       const existingLogs = logEntryFactory.buildList(600);
       // Override to predictable values
-      existingLogs.forEach((log, i) => { log.id = `existing-${i}`; log.text = `log-${i}`; });
+      existingLogs.forEach((log, i) => {
+        log.id = `existing-${i}`;
+        log.text = `log-${i}`;
+      });
       useReflexStore.setState({ logs: existingLogs });
 
       useReflexStore.getState().log("action", "new-entry");

@@ -1,5 +1,9 @@
 import { useNeuralStore } from "../../stores/neural";
-import { normalizeScore, scoreColor as getScoreColor, statusColor as getStatusColor } from "../../utils/nerve";
+import {
+  normalizeScore,
+  scoreColor as getScoreColor,
+  statusColor as getStatusColor,
+} from "../../utils/nerve";
 
 interface TestResult {
   passed?: boolean;
@@ -157,7 +161,10 @@ export function NerveDetail() {
                     : "rgba(255,255,255,0.5)"
               }
             />
-            <InfoRow label="Iteration" value={`${nerve?.iteration ?? 0} / ${nerve?.max_iterations ?? "?"}`} />
+            <InfoRow
+              label="Iteration"
+              value={`${nerve?.iteration ?? 0} / ${nerve?.max_iterations ?? "?"}`}
+            />
           </div>
 
           {/* Invocation stats from details */}

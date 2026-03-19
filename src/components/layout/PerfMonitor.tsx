@@ -47,7 +47,8 @@ export function PerfMonitor() {
     return () => cancelAnimationFrame(rafId.current);
   }, []);
 
-  const fpsColor = fps >= FPS_GOOD_THRESHOLD ? "#00ff88" : fps >= FPS_WARN_THRESHOLD ? "#f5d05b" : "#f55b5b";
+  const fpsColor =
+    fps >= FPS_GOOD_THRESHOLD ? "#00ff88" : fps >= FPS_WARN_THRESHOLD ? "#f5d05b" : "#f55b5b";
 
   return (
     <div

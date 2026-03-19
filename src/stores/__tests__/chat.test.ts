@@ -59,7 +59,9 @@ describe("useChatStore", () => {
 
   describe("addAssistantMessage", () => {
     it("appends an assistant message with text from envelope", () => {
-      const envelope = envelopeFactory.build({ content: { text: "hi there", markdown: false, tone: "neutral" } });
+      const envelope = envelopeFactory.build({
+        content: { text: "hi there", markdown: false, tone: "neutral" },
+      });
       useChatStore.getState().addAssistantMessage(envelope);
       const state = useChatStore.getState();
       expect(state.messages).toHaveLength(1);
@@ -103,8 +105,16 @@ describe("useChatStore", () => {
     });
 
     it("targets the last assistant message, not earlier ones", () => {
-      useChatStore.getState().addAssistantMessage(envelopeFactory.build({ content: { text: "first", markdown: false, tone: "neutral" } }));
-      useChatStore.getState().addAssistantMessage(envelopeFactory.build({ content: { text: "second", markdown: false, tone: "neutral" } }));
+      useChatStore
+        .getState()
+        .addAssistantMessage(
+          envelopeFactory.build({ content: { text: "first", markdown: false, tone: "neutral" } }),
+        );
+      useChatStore
+        .getState()
+        .addAssistantMessage(
+          envelopeFactory.build({ content: { text: "second", markdown: false, tone: "neutral" } }),
+        );
       useChatStore.getState().appendAudioToLast("audio2", "audio/wav");
 
       const messages = useChatStore.getState().messages;

@@ -91,9 +91,10 @@ function toDreamStage(stage: string): DreamStage {
  * so the log drawer can display the complete payload.
  */
 function rawEnvelope(channel: string, data: unknown): Record<string, unknown> {
-  const ts = typeof data === "object" && data !== null && "timestamp" in data
-    ? (data as Record<string, unknown>).timestamp
-    : undefined;
+  const ts =
+    typeof data === "object" && data !== null && "timestamp" in data
+      ? (data as Record<string, unknown>).timestamp
+      : undefined;
   return { channel, data, ...(ts !== undefined && { timestamp: ts }) };
 }
 
@@ -123,14 +124,22 @@ function registerBrainHandlers(c: ArqitectClient, { neural, chat, reflex }: Stor
 
     if (DREAM_STAGES.has(stage)) {
       neural().setDream(toDreamStage(stage), data.nerve || null, thoughtMsg || null);
-      reflex().log("system", `[DREAM] ${thoughtMsg || stage}${data.nerve ? ` → ${data.nerve}` : ""}`, rawEnvelope(Channel.BRAIN_THOUGHT, data));
+      reflex().log(
+        "system",
+        `[DREAM] ${thoughtMsg || stage}${data.nerve ? ` → ${data.nerve}` : ""}`,
+        rawEnvelope(Channel.BRAIN_THOUGHT, data),
+      );
     } else {
       if (neural().dreamStage !== null) neural().setDream(null);
       neural().setBrainState(stage === "responding" ? "responding" : "thinking");
       chat().setTyping(true);
     }
 
-    reflex().log("thought", `[${stage}] ${thoughtMsg || data.task || data.nerve || ""}`, rawEnvelope(Channel.BRAIN_THOUGHT, data));
+    reflex().log(
+      "thought",
+      `[${stage}] ${thoughtMsg || data.task || data.nerve || ""}`,
+      rawEnvelope(Channel.BRAIN_THOUGHT, data),
+    );
   });
 
   c.on(Channel.BRAIN_ACTION, (data) => {
@@ -138,7 +147,11 @@ function registerBrainHandlers(c: ArqitectClient, { neural, chat, reflex }: Stor
     if (neural().dreamStage !== null) neural().setDream(null);
     neural().setActiveNerve(data.nerve);
     neural().setBrainState("acting");
-    reflex().log("action", `Invoke nerve: ${data.nerve} ${data.args || ""}`, rawEnvelope(Channel.BRAIN_ACTION, data));
+    reflex().log(
+      "action",
+      `Invoke nerve: ${data.nerve} ${data.args || ""}`,
+      rawEnvelope(Channel.BRAIN_ACTION, data),
+    );
   });
 
   c.on(Channel.BRAIN_RESPONSE, (envelope) => {
@@ -149,7 +162,11 @@ function registerBrainHandlers(c: ArqitectClient, { neural, chat, reflex }: Stor
 
     const unwrapped = unwrapJsonResponse(envelope);
     chat().addAssistantMessage(unwrapped);
-    reflex().log("result", JSON.stringify(unwrapped.content), rawEnvelope(Channel.BRAIN_RESPONSE, envelope));
+    reflex().log(
+      "result",
+      JSON.stringify(unwrapped.content),
+      rawEnvelope(Channel.BRAIN_RESPONSE, envelope),
+    );
   });
 
   c.on(Channel.BRAIN_TASK, (data) => {
@@ -172,7 +189,12 @@ function registerNerveHandlers(c: ArqitectClient, { neural, reflex }: StoreAcces
     neural().addEvent({ type: "result", nerve: data.nerve });
     try {
       const parsed = JSON.parse(data.output) as Record<string, string>;
-      if (parsed.tool) reflex().log("result", `[${data.nerve}] tool: ${parsed.tool}`, rawEnvelope(Channel.NERVE_RESULT, data));
+      if (parsed.tool)
+        reflex().log(
+          "result",
+          `[${data.nerve}] tool: ${parsed.tool}`,
+          rawEnvelope(Channel.NERVE_RESULT, data),
+        );
       reflex().log(
         "result",
         `[${data.nerve}] ${(parsed.response || data.output).substring(0, 200)}`,
@@ -180,7 +202,11 @@ function registerNerveHandlers(c: ArqitectClient, { neural, reflex }: StoreAcces
       );
     } catch {
       // output is not JSON — log raw
-      reflex().log("result", `[${data.nerve}] ${data.output.substring(0, 200)}`, rawEnvelope(Channel.NERVE_RESULT, data));
+      reflex().log(
+        "result",
+        `[${data.nerve}] ${data.output.substring(0, 200)}`,
+        rawEnvelope(Channel.NERVE_RESULT, data),
+      );
     }
   });
 
@@ -196,7 +222,11 @@ function registerNerveHandlers(c: ArqitectClient, { neural, reflex }: StoreAcces
 
   c.on(Channel.MCP_TOOL_CALL, (data) => {
     if (data.error) {
-      reflex().log("error", `[MCP] ${data.tool} ERROR: ${data.error}`, rawEnvelope(Channel.MCP_TOOL_CALL, data));
+      reflex().log(
+        "error",
+        `[MCP] ${data.tool} ERROR: ${data.error}`,
+        rawEnvelope(Channel.MCP_TOOL_CALL, data),
+      );
     } else {
       reflex().log(
         "tool",
@@ -218,12 +248,16 @@ function registerSenseHandlers(c: ArqitectClient, { senses, reflex }: StoreAcces
   });
 
   c.on(Channel.SENSE_STT_RESULT, (data) => {
-    if (data.text) reflex().log("system", `Voice: "${data.text}"`, rawEnvelope(Channel.SENSE_STT_RESULT, data));
+    if (data.text)
+      reflex().log("system", `Voice: "${data.text}"`, rawEnvelope(Channel.SENSE_STT_RESULT, data));
   });
 }
 
 /** Registers memory, system, and catch-all handlers. */
-function registerSystemHandlers(c: ArqitectClient, { memory, system, conn, reflex }: StoreAccessors): void {
+function registerSystemHandlers(
+  c: ArqitectClient,
+  { memory, system, conn, reflex }: StoreAccessors,
+): void {
   c.on(Channel.MEMORY_STATE, (data) => memory().update(data));
   c.on(Channel.SYSTEM_STATS, (data) => system().update(data));
 
@@ -265,9 +299,10 @@ function registerCatchAllHandler(c: ArqitectClient, { reflex }: StoreAccessors):
   c.onAny((channel, data) => {
     if (HANDLED_CHANNELS.has(channel)) return;
 
-    const summary = typeof data === "object" && data !== null
-      ? JSON.stringify(data).substring(0, 300)
-      : String(data);
+    const summary =
+      typeof data === "object" && data !== null
+        ? JSON.stringify(data).substring(0, 300)
+        : String(data);
     reflex().log("system", `[${channel}] ${summary}`, rawEnvelope(channel, data));
   });
 }

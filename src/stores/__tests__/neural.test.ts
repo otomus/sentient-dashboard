@@ -85,7 +85,10 @@ describe("useNeuralStore", () => {
     it("trims when exceeding 100 before appending", () => {
       const existing = neuralEventFactory.buildList(150, {}, { transient: { startId: 0 } });
       // Override IDs to be predictable
-      existing.forEach((e, i) => { e.id = `existing-${i}`; e.timestamp = i; });
+      existing.forEach((e, i) => {
+        e.id = `existing-${i}`;
+        e.timestamp = i;
+      });
       useNeuralStore.setState({ events: existing });
 
       useNeuralStore.getState().addEvent({ type: "response" });

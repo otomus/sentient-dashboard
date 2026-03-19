@@ -36,7 +36,9 @@ function LogLineRaw({ entry }: { entry: LogEntry }) {
         style={{ cursor: hasRaw ? "pointer" : "default" }}
         onClick={hasRaw ? toggle : undefined}
       >
-        <span style={{ color: "rgba(255,255,255,0.25)", marginRight: 8, fontSize: 10 }}>{time}</span>
+        <span style={{ color: "rgba(255,255,255,0.25)", marginRight: 8, fontSize: 10 }}>
+          {time}
+        </span>
         <span
           style={{
             color: typeColors[entry.type] || "rgba(255,255,255,0.35)",

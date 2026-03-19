@@ -206,7 +206,9 @@ function NerveRow({ nerve, onClick }: { nerve: NerveStatus; onClick: () => void 
             {nerve.name}
           </span>
         </div>
-        <span style={{ color: nerveScoreColor, fontSize: 13, fontWeight: 800 }}>{scorePercent}%</span>
+        <span style={{ color: nerveScoreColor, fontSize: 13, fontWeight: 800 }}>
+          {scorePercent}%
+        </span>
       </div>
 
       {/* Score bar */}
