@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { NerveStatus, NerveDetails } from "@otomus/sentient-sdk";
+import type { NerveStatus, NerveDetails } from "@otomus/arqitect-sdk";
 
 /**
  * A discrete event in the neural processing pipeline.

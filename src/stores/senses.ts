@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SenseCalibration } from "@otomus/sentient-sdk";
+import type { SenseCalibration } from "@otomus/arqitect-sdk";
 
 interface SensesStore {
   calibration: Record<string, SenseCalibration>;

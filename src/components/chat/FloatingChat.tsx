@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useChatStore } from "../../stores/chat";
 import { ChatMessage } from "./ChatMessage";
-import { sendTask } from "../../client/sentient";
+import { sendTask } from "../../client/arqitect";
 
 /** Draggable floating chat widget with message history, typing indicator, and unread badge. */
 export function FloatingChat() {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { initClient, resetClient } from "./client/sentient";
+import { initClient, resetClient } from "./client/arqitect";
 import { resolveServerAddress } from "./components/layout/SettingsCog";
 import { Brain2D } from "./components/visualization/Brain2D";
 import { Header } from "./components/layout/Header";

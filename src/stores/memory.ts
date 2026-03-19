@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { MemoryState } from "@otomus/sentient-sdk";
+import type { MemoryState } from "@otomus/arqitect-sdk";
 
 interface MemoryStore {
   session: Record<string, string>;

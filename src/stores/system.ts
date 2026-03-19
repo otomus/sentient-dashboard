@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SystemStats } from "@otomus/sentient-sdk";
+import type { SystemStats } from "@otomus/arqitect-sdk";
 
 interface SystemStore {
   stats: SystemStats | null;

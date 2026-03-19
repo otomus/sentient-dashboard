@@ -1,5 +1,5 @@
 import { useNeuralStore } from "../stores/neural";
-import { getClient } from "../client/sentient";
+import { getClient } from "../client/arqitect";
 
 /** Score thresholds for color-coding nerve health. */
 const SCORE_THRESHOLD_HIGH = 70;

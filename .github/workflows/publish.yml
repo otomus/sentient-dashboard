@@ -23,8 +23,8 @@ jobs:
       - name: Check if version changed
         id: version_check
         run: |
-          CURRENT=$(node -p "require('./packages/create-sentient-dashboard/package.json').version")
-          git show HEAD~1:packages/create-sentient-dashboard/package.json > /tmp/prev-package.json 2>/dev/null || echo '{"version":"0.0.0"}' > /tmp/prev-package.json
+          CURRENT=$(node -p "require('./packages/create-arqitect-dashboard/package.json').version")
+          git show HEAD~1:packages/create-arqitect-dashboard/package.json > /tmp/prev-package.json 2>/dev/null || echo '{"version":"0.0.0"}' > /tmp/prev-package.json
           PREVIOUS=$(node -p "require('/tmp/prev-package.json').version")
           echo "current=$CURRENT" >> $GITHUB_OUTPUT
           echo "previous=$PREVIOUS" >> $GITHUB_OUTPUT
@@ -54,12 +54,12 @@ jobs:
 
       - name: Prepack template
         if: steps.version_check.outputs.changed == 'true'
-        working-directory: packages/create-sentient-dashboard
+        working-directory: packages/create-arqitect-dashboard
         run: npm run prepack
 
       - name: Publish to npm
         if: steps.version_check.outputs.changed == 'true'
-        working-directory: packages/create-sentient-dashboard
+        working-directory: packages/create-arqitect-dashboard
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -70,6 +70,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=${{ steps.version_check.outputs.current }}
-          gh release create "create-sentient-dashboard@v${VERSION}" \
-            --title "create-sentient-dashboard v${VERSION}" \
+          gh release create "create-arqitect-dashboard@v${VERSION}" \
+            --title "create-arqitect-dashboard v${VERSION}" \
             --generate-notes

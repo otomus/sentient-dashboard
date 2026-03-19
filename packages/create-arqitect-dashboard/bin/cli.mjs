@@ -3,7 +3,7 @@
 import { scaffold } from "../lib/scaffold.mjs";
 
 /**
- * Parses CLI arguments for the create-sentient-dashboard command.
+ * Parses CLI arguments for the create-arqitect-dashboard command.
  * @param {string[]} argv - Raw process.argv array.
  * @returns {{ serverAddress: string | null, targetDir: string | null }}
  */
@@ -35,10 +35,10 @@ if (isMain) {
     console.error(
       `Error: --server-address is required
 
-Usage: create-sentient-dashboard --server-address <host:port> [target-dir]
+Usage: create-arqitect-dashboard --server-address <host:port> [target-dir]
 
 Example:
-  npx @otomus/create-sentient-dashboard --server-address 192.168.1.10:4000`,
+  npx @otomus/create-arqitect-dashboard --server-address 192.168.1.10:4000`,
     );
     process.exit(1);
   }
@@ -46,7 +46,7 @@ Example:
   try {
     await scaffold({
       serverAddress,
-      targetDir: targetDir || "./sentient-dashboard",
+      targetDir: targetDir || "./arqitect-dashboard",
     });
   } catch {
     process.exit(1);

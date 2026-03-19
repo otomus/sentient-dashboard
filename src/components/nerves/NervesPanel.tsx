@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNeuralStore } from "../../stores/neural";
 import { normalizeScore, scoreColor, statusColor, loadNerveDetails } from "../../utils/nerve";
-import type { NerveStatus } from "@otomus/sentient-sdk";
+import type { NerveStatus } from "@otomus/arqitect-sdk";
 
 interface NervesPanelProps {
   open: boolean;

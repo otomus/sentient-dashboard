@@ -2,12 +2,12 @@ import { Factory } from "fishery";
 import type {
   NerveStatus,
   NerveDetails,
-  SentientEnvelope,
+  ArqitectEnvelope,
   SystemStats,
   MemoryState,
   SenseCalibration,
   EnvelopeContent,
-} from "@otomus/sentient-sdk";
+} from "@otomus/arqitect-sdk";
 import type { ChatMessage } from "../stores/chat";
 import type { NeuralEvent } from "../stores/neural";
 import type { LogEntry } from "../stores/reflex";
@@ -49,8 +49,8 @@ export const envelopeContentFactory = Factory.define<EnvelopeContent>(() => ({
   tone: "neutral",
 }));
 
-/** Factory for SentientEnvelope — a complete brain response. */
-export const envelopeFactory = Factory.define<SentientEnvelope>(({ sequence }) => ({
+/** Factory for ArqitectEnvelope — a complete brain response. */
+export const envelopeFactory = Factory.define<ArqitectEnvelope>(({ sequence }) => ({
   id: `env-${sequence}`,
   timestamp: new Date().toISOString(),
   content: envelopeContentFactory.build(),

@@ -54,7 +54,7 @@ describe("useMemoryStore", () => {
         conversation: null,
         episodes: null,
         facts: null,
-      } as unknown as import("@otomus/sentient-sdk").MemoryState);
+      } as unknown as import("@otomus/arqitect-sdk").MemoryState);
       const state = useMemoryStore.getState();
       expect(state.session).toEqual({});
       expect(state.conversation).toEqual([]);
@@ -89,7 +89,7 @@ describe("useMemoryStore", () => {
         conversation: undefined,
         episodes: undefined,
         facts: undefined,
-      } as unknown as import("@otomus/sentient-sdk").MemoryState);
+      } as unknown as import("@otomus/arqitect-sdk").MemoryState);
       const state = useMemoryStore.getState();
       expect(state.session).toEqual({});
       expect(state.conversation).toEqual([]);

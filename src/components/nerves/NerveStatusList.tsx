@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { useNeuralStore } from "../../stores/neural";
 import { PanelShell } from "../layout/PanelShell";
-import type { NerveStatus } from "@otomus/sentient-sdk";
+import type { NerveStatus } from "@otomus/arqitect-sdk";
 
 function NerveCardRaw({ nerve }: { nerve: NerveStatus }) {
   const scorePercent = Math.round(nerve.score * 100);

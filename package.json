@@ -1,5 +1,5 @@
 {
-  "name": "sentient-dashboard",
+  "name": "arqitect-dashboard",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -17,7 +17,7 @@
     "check": "npm run lint && npm run format:check && npm run build"
   },
   "dependencies": {
-    "@otomus/sentient-sdk": "^0.5.0",
+    "@otomus/arqitect-sdk": "^1.0.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@react-three/postprocessing": "^3.0.4",

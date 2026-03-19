@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  base: process.env.GITHUB_ACTIONS ? "/sentient-dashboard/" : "/",
+  base: process.env.GITHUB_ACTIONS ? "/arqitect-dashboard/" : "/",
   plugins: [react(), tailwindcss()],
   server: {
     port: 5173,

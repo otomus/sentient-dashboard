@@ -29,7 +29,7 @@ export function ChatView() {
 
         {isTyping && (
           <div className="self-start text-[var(--dim)] text-[11px] italic px-3 py-1">
-            Sentient is thinking
+            Arqitect is thinking
             <span className="inline-block animate-[blink_1.4s_infinite]">.</span>
             <span className="inline-block animate-[blink_1.4s_infinite_0.2s]">.</span>
             <span className="inline-block animate-[blink_1.4s_infinite_0.4s]">.</span>

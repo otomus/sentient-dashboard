@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { sendTask } from "../../client/sentient";
+import { sendTask } from "../../client/arqitect";
 import { useChatStore } from "../../stores/chat";
 
 export function InputBar() {

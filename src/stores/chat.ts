@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SentientEnvelope } from "@otomus/sentient-sdk";
+import type { ArqitectEnvelope } from "@otomus/arqitect-sdk";
 
 /**
  * A single message in the chat history.
@@ -14,7 +14,7 @@ export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   text: string;
-  envelope?: SentientEnvelope;
+  envelope?: ArqitectEnvelope;
   source?: string;
   timestamp: number;
 }
@@ -24,7 +24,7 @@ interface ChatStore {
   isTyping: boolean;
 
   addUserMessage: (text: string, source?: string) => void;
-  addAssistantMessage: (envelope: SentientEnvelope) => void;
+  addAssistantMessage: (envelope: ArqitectEnvelope) => void;
   setTyping: (typing: boolean) => void;
   appendAudioToLast: (audioB64: string, mime: string) => void;
 }

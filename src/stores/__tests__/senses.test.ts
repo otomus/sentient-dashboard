@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useSensesStore } from "../senses";
 import { senseCalibrationFactory } from "../../test/factories";
-import type { SenseCalibration } from "@otomus/sentient-sdk";
+import type { SenseCalibration } from "@otomus/arqitect-sdk";
 
 const initialState = {
   calibration: {},

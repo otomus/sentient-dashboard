@@ -1,0 +1,19 @@
+{
+  "name": "@otomus/create-arqitect-dashboard",
+  "version": "1.0.0",
+  "description": "Scaffold an arqitect-dashboard instance configured to connect to your arqitect-core server",
+  "author": "otomus",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "create-arqitect-dashboard": "./bin/cli.mjs"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "template"
+  ],
+  "scripts": {
+    "prepack": "node lib/prepare-template.mjs"
+  }
+}

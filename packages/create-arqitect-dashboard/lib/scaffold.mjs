@@ -25,11 +25,11 @@ function run(cmd, args, cwd) {
 }
 
 /**
- * Scaffolds a new sentient-dashboard project by copying the template,
+ * Scaffolds a new arqitect-dashboard project by copying the template,
  * writing a `.env` file, and running `npm install` + `npm run build`.
  * Cleans up the target directory on failure.
  * @param {object} options
- * @param {string} options.serverAddress - Host:port of the sentient-core server.
+ * @param {string} options.serverAddress - Host:port of the arqitect-core server.
  * @param {string} options.targetDir - Relative or absolute path for the new project.
  */
 export async function scaffold({ serverAddress, targetDir }) {
@@ -45,7 +45,7 @@ export async function scaffold({ serverAddress, targetDir }) {
   }
 
   try {
-    console.log(`Scaffolding sentient-dashboard into ${dest}...`);
+    console.log(`Scaffolding arqitect-dashboard into ${dest}...`);
 
     await cp(TEMPLATE_DIR, dest, { recursive: true });
     console.log("Template copied.");
