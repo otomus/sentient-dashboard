@@ -82,10 +82,12 @@ function formatUptime(seconds: number): string {
 
 interface CounterBarProps {
   onNervesClick: () => void;
+  /** Extra top offset in pixels (e.g. to sit below a WIP banner). */
+  topOffset?: number;
 }
 
 /** Horizontal bar of metric counters (nerves, brain state, events, system stats). */
-export function CounterBar({ onNervesClick }: CounterBarProps) {
+export function CounterBar({ onNervesClick, topOffset = 0 }: CounterBarProps) {
   const nerves = useNeuralStore((s) => s.nerves);
   const brainState = useNeuralStore((s) => s.brainState);
   const eventsLength = useNeuralStore((s) => s.events.length);
@@ -113,7 +115,7 @@ export function CounterBar({ onNervesClick }: CounterBarProps) {
   return (
     <div
       className="fixed z-30 flex items-center gap-3 justify-end"
-      style={{ top: 80, right: 64, left: 480 }}
+      style={{ top: 80 + topOffset, right: 64, left: 480 }}
     >
       <Counter
         label="Nerves"

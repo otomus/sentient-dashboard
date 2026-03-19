@@ -80,8 +80,13 @@ function LogLineRaw({ entry }: { entry: LogEntry }) {
 
 const LogLine = memo(LogLineRaw);
 
+interface LogDrawerProps {
+  /** Extra top offset in pixels (e.g. to sit below a WIP banner). */
+  topOffset?: number;
+}
+
 /** Slide-out drawer from the left showing the reflex event log stream. */
-export function LogDrawer() {
+export function LogDrawer({ topOffset = 0 }: LogDrawerProps) {
   const [open, setOpen] = useState(false);
   const logs = useReflexStore((s) => s.logs);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -98,7 +103,7 @@ export function LogDrawer() {
       <div
         className="fixed z-40 flex"
         style={{
-          top: 60,
+          top: 60 + topOffset,
           left: 0,
           bottom: 0,
           width: 420,

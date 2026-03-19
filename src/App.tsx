@@ -59,13 +59,13 @@ export default function App() {
       <Header onConnect={connectToServer} topOffset={WIP_BANNER_HEIGHT} />
 
       {/* Counter widgets under header */}
-      <CounterBar onNervesClick={() => setNervesOpen(true)} />
+      <CounterBar onNervesClick={() => setNervesOpen(true)} topOffset={WIP_BANNER_HEIGHT} />
 
       {/* Chat widget */}
       <FloatingChat />
 
       {/* Log drawer from left */}
-      <LogDrawer />
+      <LogDrawer topOffset={WIP_BANNER_HEIGHT} />
 
       {/* Nerves panel — slides from right */}
       <NervesPanel open={nervesOpen} onClose={() => setNervesOpen(false)} />
