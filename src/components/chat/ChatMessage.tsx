@@ -68,13 +68,31 @@ function ChatMessageRaw({ message }: Props) {
 
       {/* Card */}
       {envelope?.rich?.card && (
-        <div className="mt-2 p-2 border-l-2 border-[var(--accent)] bg-[var(--accent)]/5 rounded-r">
-          <div className="font-bold text-[var(--accent)] text-xs mb-1">
+        <div
+          className="mt-2 rounded-md"
+          style={{
+            padding: "10px 12px",
+            background: "rgba(0, 212, 255, 0.06)",
+            border: "1px solid rgba(0, 212, 255, 0.2)",
+          }}
+        >
+          <div
+            className="text-xs font-semibold mb-1"
+            style={{ color: "#00d4ff" }}
+          >
             {envelope.rich.card.title}
           </div>
-          <div className="text-xs text-[var(--text)]">{envelope.rich.card.body}</div>
+          <div
+            className="text-xs leading-relaxed"
+            style={{ color: "rgba(255, 255, 255, 0.78)" }}
+          >
+            {envelope.rich.card.body}
+          </div>
           {envelope.rich.card.footer && (
-            <div className="text-[10px] text-[var(--dim)] mt-1 italic">
+            <div
+              className="text-[10px] mt-1.5 italic"
+              style={{ color: "rgba(255, 255, 255, 0.35)" }}
+            >
               {envelope.rich.card.footer}
             </div>
           )}
