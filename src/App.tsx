@@ -10,6 +10,7 @@ import { NerveDetail } from "./components/nerves/NerveDetail";
 import { NervesPanel } from "./components/nerves/NervesPanel";
 import { DreamPanel } from "./components/nerves/DreamPanel";
 import { PerfMonitor } from "./components/layout/PerfMonitor";
+import { Footer } from "./components/layout/Footer";
 import { WipBanner, WIP_BANNER_HEIGHT } from "./components/layout/WipBanner";
 
 /**
@@ -78,6 +79,9 @@ export default function App() {
 
       {/* Performance monitor */}
       <PerfMonitor />
+
+      {/* Footer with social links */}
+      <Footer />
     </>
   );
 }
